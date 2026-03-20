@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Configura la vista para dispositivos móviles -->
+    <link rel="icon" href="img/FotosGenerales/LogoBarberia.png" type="image/jpeg"><!-- Ícono del sitio -->
+    <title>Servicios - Peluquería Barbers</title>
+    <style>
+                /*Fuentes de letras exportadas*/
+@font-face {
+  font-family: 'Maxlock';
+  src: url('maxlock/Maxlock.otf') format('truetype'),
+       url('maxlock/Maxlock.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Blenda-script';
+  src: url('blenda_script/Blenda\ Script.otf') format('truetype'),
+       url('blenda_script/Blenda\ Script.otf') format('opentype');
+}
+        /* Estilos generales para la página */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Blenda-script', sans-serif;
+        }
+
+        /* Efecto de fade-in al cargar la página */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+
+        /* Definición de la animación de desvanecimiento */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #222;
+            color: white;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: top 0.3s ease-in-out;
+        }
+
+        /* Navegación la cabecera */
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+            position: relative;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        nav ul li:hover {
+            transform: scale(1.1);
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        nav ul li a:hover {
+            color: #ffffff;
+        }
+                        /*vista horizontal*/
+                        @media (orientation: landscape)  and (max-width: 760px){
+            header{
+                height: 35px;
+            }
+            
+        }
+        @media (orientation: landscape)  and (min-width: 1024px){
+            header{
+                height: 120px;
+            }
+            
+        }
+
+        /* Imagen del logotipo */
+        .imagen {
+            width: 100px;
+            height: auto;
+            border-radius: 6%;
+            transition: transform 0.5s ease;
+        }
+
+        .imagen:hover {
+            transform: scale(1.1);
+        }
+
+        /* Menú responsive */
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-toggle div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            width: 200px;
+            list-style: none;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav ul li:hover > ul {
+            display: block;
+        }
+
+        /* Diseño responsivo */
+        @media (max-width: 500px) {
+            nav {
+                display: none;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                background-color: #333;
+                width: 300px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            }
+
+            nav.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+        }
+
+        /* Imagen de peluqueria-Vigo  con parallax */
+        .imagen2 {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            display: block;
+            padding-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .imagen2:hover {
+            transform: scale(1.05);
+        }
+
+        .parallax {
+            background-image: url('img/FotosGenerales/barberia-vigo.jpg');
+            height: 550px;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /*Secciones de texto del main*/
+        section {
+            padding: 30px 30px;
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+
+        section h2 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Maxlock', sans-serif;
+        }
+        h4{
+            font-size: 40px;
+            text-align: center;
+        }
+
+        /* Contenedor de servicios */
+        .services-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .service {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+
+        /* fotos de servicios */
+        .service img {
+            width: 100%;
+            max-width: 250px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        /*Texto de servicios */
+        .service h3 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .service p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* Comentarios de clientes */
+        .comentarios {
+            padding: 50px 5%;
+            background-color: #fff;
+            text-align: center;
+        }
+
+        .comentarios h2 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .comentario {
+            display: flex;
+            align-items: center;
+            background-color: #f8f8f8;
+            border-left: 5px solid #e67e22;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 900px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            flex-wrap: wrap;
+        }
+        /* Comentarios imagen */
+        .comentario img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-right: 20px;
+            object-fit: cover;
+            border: 3px solid #e67e22;
+        }
+        /* Comentarios parte de texto*/
+        .comentario .texto {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .comentario p {
+            font-size: 18px;
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .comentario .cliente {
+            font-weight: bold;
+            color: #e67e22;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .comentario {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .comentario img {
+                margin-bottom: 15px;
+                margin-right: 0;
+            }
+        }
+        /* Decoracion de titulos h2*/
+        .h2titulos{
+            border-bottom:thin gray solid;
+            padding-bottom: 8px;
+            min-width: 450px;
+            width:  auto;
+            display:inline-block;
+           
+        }
+
+        /* Pie de página */
+        footer {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            padding: 20px 30px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        
+        footer p {
+            font-size: 16px;
+            color: #bbb;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .PieDePagina{
+            color: #bbb;
+            text-decoration: none
+        }
+
+        /* Modal para detalles de servicios */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 50%;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Boton de X para salir del modal */
+        .close-btn {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+        }
+        
+        /* Continuacion de Modal para detalles de servicios*/
+        .modal-content img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .modal-content p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Boton de mas informacion */
+        .btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #db7704;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #b35f00;
+        }  
+    </style>
+</head>
+<body>
+     <!-- Cabecera -->
+    <header>
+         <!-- Logo con enlace a la portada -->
+        <a href="portadah.html">
+            <img class="imagen" src="img/FotosGenerales/LogoBarberia.png" alt="Logo de la Peluquería">
+        </a>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+         <!-- Menú de navegación -->
+        <nav id="menu">
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="pagina2.html">Equipo</a></li>
+                <li><a href="pagina3.html">Servicios</a></li>
+                <li><a href="pagina4.html">Contacto</a></li>
+                <li><a href="AcercaDe.html">Acerca de</a></li>
+            </ul>
+        </nav>
+    </header>
+    <!-- Cuerpo de la pagina-->
+    <main>
+        <div class="parallax"></div>
+        <!-- Seccion de servicios de la peluqueria-->
+        <section>
+            <h2 class="h2titulos">Nuestros Servicios</h2>
+            <p>Ofrecemos una variedad de servicios para que luzcas siempre impecable. Desde cortes clásicos hasta las últimas tendencias.</p>
+            <div class="services-container">
+                <!-- Servicio Corte Pelo-->
+                <div class="service">     
+                    <h3>Corte al Gusto</h3>
+                    <br>
+                    <h4>10€</h4>
+                    <br>
+                    <button class="btn" onclick="openModal(1)">Más información</button>
+                </div>
+                <!--Servicio Barba-->
+                <div class="service">     
+                    <h3>Arreglo de Barba</h3>
+                    <br>
+                    <h4>7€</h4>
+                    <br>
+                    <button class="btn" onclick="openModal(2)">Más información</button>
+                </div>
+                <!--Servicio corteBarbaPelo-->
+                <div class="service">
+                    <h3>Corte  y Arreglo de Barba</h3>
+                    <br>
+                    <h4>15€</h4>
+                    <button class="btn" onclick="openModal(3)">Más información</button>
+                </div>
+                <!--Servicio tinte-->
+                <div class="service">
+                    <h3>Coloración y Tintes de Pelo</h3>
+                    <br>
+                    <h4>20€</h4>
+                    <button class="btn" onclick="openModal(4)">Más información</button>
+                </div>
+            </div>
+        </section>
+            <!-- Sección de comentarios -->
+    <section class="comentarios">
+        <h2 class="h2titulos">Opiniones de Nuestros Clientes</h2>
+        <!-- comentarios carlos -->
+        <div class="comentario">
+            <img src="img/clientes/carlos.jpg" alt="Cliente 1">
+            <div class="texto">
+                <p>"Un excelente servicio, atención profesional y un corte impecable. El personal fue muy amable y escuchó exactamente lo que quería. Me hicieron sentir muy cómodo durante toda la visita. ¡Definitivamente regresaré!"</p>
+                <p class="cliente">- Carlos M.</p>
+            </div>
+        </div>
+        <!-- comentarios Laura -->
+        <div class="comentario">
+            <img src="img/clientes/Laura.png" alt="Cliente 2">
+            <div class="texto">
+                <p>"Me encantó el ambiente y la calidad del corte. La barbería tiene un estilo increíble y los barberos son unos verdaderos artistas.Mi hijo salio renovado y con un look espectacular. ¡Muy recomendable!"</p>
+                <p class="cliente">- Laura R.</p>
+            </div>
+        </div>
+        <!-- comentarios Andres -->
+        <div class="comentario">
+            <img src="img/clientes/andre.jpg" alt="Cliente 3">
+            <div class="texto">
+                <p>"El mejor arreglo de barba que he tenido. Atención de primera y resultado perfecto. Se tomaron el tiempo necesario para asegurarse de que todo quedara perfecto, y el ambiente relajante hizo que la experiencia fuera aún mejor."</p>
+                <p class="cliente">- Andrés G.</p>
+            </div>
+        </div>
+
+    </section>
+  
+    </main>
+    <footer>
+        <p>
+            <a href="AcercaDe.html" class="PieDePagina">Esta es una empresa ficticia y este sitio web es un proyecto de prácticas.<br> © 2025 Peluquería Barbers. Todos los derechos reservados.</a>
+        </p>
+    </footer>
+
+            <!-- Parte de Modal -->
+
+            <!-- Modal Servicio Corte Pelo-->
+            <div id="modal1" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" onclick="closeModal(1)">&times;</span>
+                    <h2>Corte al Gusto</h2>
+                    <img src="img/Servicios/cortePelo.png" alt="Corte de pelo">
+                    <p>Un corte tradicional y elegante para cualquier ocasión.</p>
+                </div>
+            </div>
+            <!-- Modal Servicio Barba-->
+            <div id="modal2" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" onclick="closeModal(2)">&times;</span>
+                    <h2>Arreglo de Barba</h2>
+                    <img src="img/Servicios/Barba.png" alt="Corte de barba">
+                    <p>Definición y estilo para tu barba, con afeitado a navaja si lo prefieres</p>
+                </div>
+            </div>
+            <!-- Modal Servicio corteBarbaPelo-->
+            <div id="modal3" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" onclick="closeModal(3)">&times;</span>
+                    <h2>Corte y Arreglo de Barba</h2>
+                    <img src="img/Servicios/CorteBarbaPelo.png" alt="Corte de pelo y barba">
+                    <p>Las últimas tendencias en cortes y afeitados de barbas masculinos.</p>
+                </div>
+            </div>
+            <!-- Modal Servicio tinte-->
+            <div id="modal4" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" onclick="closeModal(4)">&times;</span>
+                    <h2>Coloración y Tintes de Pelo</h2>
+                    <img src="img/Servicios/tinte.png" alt="tinte">
+                    <p>Tintes y reflejos para un look renovado y moderno.</p>
+                </div>
+            </div>
+
+
+    <script>
+        //Declarciones
+        let lastScrollTop = 0;
+        let isScrolling;
+        const header = document.querySelector('header');
+
+        // Oculta y muestra el header al hacer scroll
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                header.style.top = '-100px'; // Ajusta según el tamaño de tu cabecera
+            } else {
+                header.style.top = '0';
+            }
+
+            clearTimeout(isScrolling);
+            isScrolling = setTimeout(function() {
+                header.style.top = '0';
+            }, 1000);
+
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        });
+
+        // Función para mostrar u ocultar el menú en móviles
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.classList.toggle('active');
+        }
+                // Abrir la modal correspondiente
+                function openModal(index) {
+            const modal = document.getElementById(`modal${index}`);
+            const blur = document.getElementById("blur");
+            modal.style.display = "block";
+            blur.style.display = "block";
+        }
+
+        // Cerrar la modal correspondiente
+        function closeModal(index) {
+            const modal = document.getElementById(`modal${index}`);
+            const blur = document.getElementById("blur");
+            modal.style.display = "none";
+            blur.style.display = "none";
+        }
+        //Resetear los modal que estan abiertos
+        function resetAll() {
+            document.querySelectorAll(".modal").forEach(modal => modal.style.display = "none");
+            document.getElementById("blur").style.display = "none";
+        }
+    </script>
+
+</body>
+</html>
+

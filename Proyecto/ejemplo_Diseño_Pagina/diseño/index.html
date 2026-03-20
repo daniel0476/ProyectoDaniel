@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Configura la vista para dispositivos móviles -->
+    <link rel="icon" href="img/FotosGenerales/LogoBarberia.png" type="image/jpeg"> <!-- Ícono del sitio -->
+    <title>Peluquería Barbers</title>
+    <style>
+        /*Fuentes de letras exportadas*/
+@font-face {
+  font-family: 'Maxlock';
+  src: url('maxlock/Maxlock.otf') format('truetype'),
+       url('maxlock/Maxlock.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Blenda-script';
+  src: url('blenda_script/Blenda\ Script.otf') format('truetype'),
+       url('blenda_script/Blenda\ Script.otf') format('opentype');
+}
+
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Blenda-script', sans-serif;
+        }
+
+        /* Efecto de fade-in al cargar la página */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+
+        /* Definición de la animación de desvanecimiento */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+
+        /* Estilos del encabezado */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #222;
+            color: white;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: top 0.3s ease-in-out;
+            
+        }
+
+        /* Navegación la cabecera */
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+            position: relative;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        nav ul li:hover {
+            transform: scale(1.1);
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            font-family: 'Maxlock', sans-serif;
+            
+        }
+
+        nav ul li a:hover {
+            color: #ffffff;
+        }
+
+        /* Imagen del logotipo */
+        .imagen {
+            width: 100px;
+            height: auto;
+            border-radius: 6%;
+            transition: transform 0.5s ease;
+        }
+
+        .imagen:hover {
+            transform: scale(1.1);
+        }
+
+        /*vista horizontal*/
+        @media (orientation: landscape)  and (max-width: 760px){
+            header{
+                height: 35px;
+            }
+            
+        }
+        @media (orientation: landscape)  and (min-width: 1024px){
+            header{
+                height: 120px;
+            }
+            
+        }
+
+        /* Menú responsive */
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-toggle div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            width: 200px;
+            list-style: none;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav ul li:hover > ul {
+            display: block;
+        }
+
+        /* Diseño responsivo */
+        @media (max-width: 500px) {
+            nav {
+                display: none;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                background-color: #333;
+                width: 300px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            }
+
+            nav.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+        }
+
+        /* Imagen de peluqueria-Vigo  con parallax */
+        .imagen2 {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            display: block;
+            padding-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .imagen2:hover {
+            transform: scale(1.05);
+        }
+
+        .parallax {
+            background-image: url('img/FotosGenerales/barberia-vigo.jpg');
+            height: 550px;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /*Secciones de texto del main*/
+        section {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 50px 30px;
+            background-color: #f8f8f8;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        section h2 {
+            font-size: 35px;
+            color: #333;
+            margin-bottom: 20px;
+            width: 100%;
+            font-family: 'Maxlock', sans-serif;
+           
+
+        }
+
+        section p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+            width: 100%;
+            text-align: justify;
+        }
+
+        .contenido {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .contenido .textoBarberia h2 {
+            font-size: 40px;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .contenido .textoBarberia {
+            font-size: 22px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Imagen Berber */
+        .contenido img {
+            width: 700px;
+            height: auto;
+            border-radius: 2%;
+            transition: transform 0.5s ease;
+        }
+
+        .contenido img:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .contenido {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 90%;
+            }
+
+            .contenido .textoBarberia {
+                order: -1;
+                text-align: center;
+            }
+
+            .contenido img {
+                order: 1;
+                max-width: 100%;
+            }
+        }
+
+        /* Pie de página */
+        footer {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            padding: 20px 30px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer p {
+            font-size: 16px;
+            color: #bbb;
+        }
+
+        footer a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .PieDePagina{
+            color: #bbb;
+            text-decoration: none
+        }
+    </style>
+</head>
+<body>
+     <!-- Cabecera -->
+    <header>
+        <!-- Logo con enlace a la portada -->
+        <a href="portadah.html">
+            <img class="imagen" src="img/FotosGenerales/LogoBarberia.png" alt="Logo de la Peluquería">
+        </a>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <!-- Menú de navegación -->
+        <nav id="menu">
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="pagina2.html">Equipo</a></li>
+                <li><a href="pagina3.html">Servicios</a></li>
+                <li><a href="pagina4.html">Contacto</a></li>
+                <li><a href="AcercaDe.html">Acerca de</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Cuerpo de la pagina-->
+    <main>
+        <div class="parallax"></div>
+        <section id="inicio">
+            <div class="contenido">
+                <div class="textoBarberia">
+                    <h2>Bienvenidos a Barbers</h2>
+                    <p>
+                        En Peluquería Barbers, creemos que un buen corte de cabello no solo cambia tu apariencia,
+                        sino que también eleva tu confianza y te ayuda a sentirte como mejor te ves. Nuestra barbería
+                        es un lugar donde la tradición se encuentra con las últimas tendencias, ofreciendo una experiencia
+                        única de estilo y cuidado personal.
+                    </p>
+                    <p>
+                        Ven y disfruta de un servicio excepcional. ¡Haz tu cita y experimenta lo mejor del cuidado masculino en un solo lugar!
+                    </p>
+                </div>
+                <div>
+                    <img src="img/inicio/barberia.jpg" alt="Imagen de Barbería">
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Pie de pagina -->
+
+    <footer>
+        <p>
+            <a href="AcercaDe.html" class="PieDePagina">Esta es una empresa ficticia y este sitio web es un proyecto de prácticas.<br> © 2025 Peluquería Barbers. Todos los derechos reservados.</a>
+        </p>
+    </footer>
+
+
+    <script>
+        //Declarciones
+        let lastScrollTop = 0;
+        let isScrolling;
+        const header = document.querySelector('header');
+
+        // Oculta y muestra el header al hacer scroll
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                header.style.top = '-100px'; // Ajusta según el tamaño de tu cabecera
+            } else {
+                header.style.top = '0';
+            }
+
+            clearTimeout(isScrolling);
+            isScrolling = setTimeout(function() {
+                header.style.top = '0';
+            }, 1000);
+
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        });
+
+        // Función para mostrar u ocultar el menú en móviles
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.classList.toggle('active');
+        }
+        
+    </script>
+
+</body>
+</html>
+
+

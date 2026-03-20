@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Configura la vista para dispositivos móviles -->
+    <link rel="icon" href="img/FotosGenerales/LogoBarberia.png" type="image/jpeg"> <!-- Ícono de la página -->
+    <title>Peluquería Barbers</title> 
+    
+    <style>
+                /*Fuentes de letras exportadas*/
+@font-face {
+  font-family: 'Maxlock';
+  src: url('maxlock/Maxlock.otf') format('truetype'),
+       url('maxlock/Maxlock.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Blenda-script';
+  src: url('blenda_script/Blenda\ Script.otf') format('truetype'),
+       url('blenda_script/Blenda\ Script.otf') format('opentype');
+}
+        /* Estilos generales y reseteo */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Blenda-script', sans-serif;
+        }
+
+        /* Animación de aparición */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            opacity: 0; 
+            animation: fadeIn 1.5s forwards; 
+        }
+
+        /* Definición de la animación de desvanecimiento */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1; 
+            }
+        }
+
+        /* Estilos para el encabezado y menú de navegación */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #222;
+            color: white; 
+            position: fixed;
+            top: 0;
+            width: 100%; 
+            z-index: 1000; 
+            transition: top 0.3s ease-in-out; 
+        }
+
+        /* Estilos para el menú de navegación */
+        nav ul {
+            list-style: none; 
+            display: flex; 
+        }
+
+        nav ul li {
+            margin: 0 15px;
+            position: relative;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Efecto hover en el menú */
+        nav ul li:hover {
+            transform: scale(1.1); 
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none; 
+            font-size: 18px;
+            transition: color 0.3s ease;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        nav ul li a:hover {
+            color: #ffffff;
+        }
+
+        /* Estilos de la imagen del logo */
+        .imagen {
+            width: 100px; 
+            height: auto;
+            border-radius: 6%; 
+            transition: transform 0.5s ease; 
+        }
+
+        .imagen:hover {
+            transform: scale(1.1); 
+        }
+                        /*vista horizontal*/
+                        @media (orientation: landscape)  and (max-width: 760px){
+            header{
+                height: 35px;
+            }
+            
+        }
+        @media (orientation: landscape)  and (min-width: 1024px){
+            header{
+                height: 120px;
+            }
+            
+        }
+
+        /* Botón de menú para móviles */
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            flex-direction: column; 
+            gap: 4px;
+        }
+
+        .menu-toggle div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        /* Submenús */
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            width: 200px;
+            list-style: none;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav ul li:hover>ul {
+            display: block;
+        }
+
+        /* Diseño responsivo */
+        @media (max-width: 500px) {
+            nav {
+                display: none;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                background-color: #333;
+                width: 300px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            }
+
+            nav.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+        }
+
+        /* Estilos para la sección principal */
+        main {
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            flex: 1;
+            padding: 50px 20px;
+            background-color: #f4f4f4;
+        }
+
+        /* Estilos para la sección "Acerca de" */
+        .about {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            max-width: 800px; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2); 
+            opacity: 0;
+            transform: translateY(20px); 
+            animation: fadeInUp 1.5s forwards; 
+        }
+
+        /* Definición de la animación de aparición */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px); 
+            }
+
+            to {
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        /*Estilos para la imagen */
+        .about-image {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+    
+        /* Estilos para el título y párrafos de la sección "Acerca de" */
+        .about h1 {
+            font-size: 28px; 
+            color: #222; 
+            margin-bottom: 15px;
+        }
+
+        .about p {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Estilos responsivos para la sección "Acerca de" */
+        @media (max-width: 768px) {
+            .about {
+                padding: 20px; 
+            }
+
+            .about h1 {
+                font-size: 24px; 
+            }
+
+            .about p {
+                font-size: 16px;
+            }
+        }
+
+        /* Estilos para el pie de página */
+        footer {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            padding: 20px 30px; 
+            position: relative;
+            bottom: 0; 
+            width: 100%;
+        }
+
+        footer p {
+            font-size: 16px;
+            color: #bbb;
+        }
+
+        footer a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos adicionales para el pie de página */
+        .PieDePagina {
+            color: #bbb; 
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Encabezado con logotipo y navegación -->
+    <header>
+        <a href="portadah.html">
+            <img class="imagen" src="img/FotosGenerales/LogoBarberia.png" alt="Logo de la Peluquería"> <!-- Logo de la peluquería -->
+        </a>
+        <div class="menu-toggle" onclick="toggleMenu()"> <!-- Botón para alternar el menú en móviles -->
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <nav id="menu"> <!-- Menú de navegación -->
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="pagina2.html">Equipo</a></li>
+                <li><a href="pagina3.html">Servicios</a></li> 
+                <li><a href="pagina4.html">Contacto</a></li> 
+                <li><a href="AcercaDe.html">Acerca de</a></li> 
+            </ul>
+        </nav>
+    </header>
+    <!-- Sección principal -->
+    <main>
+        <section class="about">
+            <h1>Acerca de Nosotros</h1>
+            <p>Esta es una empresa ficticia y este sitio web es un proyecto de prácticas.</p>
+            <p>© 2025 Peluquería Barbers. Todos los derechos reservados.</p>
+ </section>
+    </main>
+    <!-- Pie de página -->
+    <footer>
+        <p>
+            <a href="AcercaDe.html" class="PieDePagina">Esta es una empresa ficticia y este sitio web es un proyecto de prácticas.<br> © 2025 Peluquería Barbers. Todos los derechos reservados.</a> <!-- Enlace en el pie de página -->
+        </p>
+    </footer>
+</body>
+
+</html>

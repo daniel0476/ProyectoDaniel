@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos de la página -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="img/FotosGenerales/LogoBarberia.png" type="image/jpeg">
+
+    <!-- Título de la página -->
+    <title>Peluquería Barbers</title>
+
+    <!-- Enlace a la hoja de estilos de Leaflet para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+                /*Fuentes de letras exportadas*/
+@font-face {
+  font-family: 'Maxlock';
+  src: url('maxlock/Maxlock.otf') format('truetype'),
+       url('maxlock/Maxlock.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Blenda-script';
+  src: url('blenda_script/Blenda\ Script.otf') format('truetype'),
+       url('blenda_script/Blenda\ Script.otf') format('opentype');
+}
+        /* Estilos globales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Blenda-script', sans-serif;
+        }
+
+        /* Estilos del body */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+
+        /* Animación fadeIn */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Estilos para el header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #222;
+            color: white;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            transition: top 0.3s ease-in-out;
+        }
+
+        /* Estilos para la lista de navegación */
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+            position: relative;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        nav ul li:hover {
+            transform: scale(1.1);
+        }
+
+        /* Estilos para los enlaces de navegación */
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        nav ul li a:hover {
+            color: #ffffff;
+        }
+                        /*vista horizontal*/
+                        @media (orientation: landscape)  and (max-width: 760px){
+            header{
+                height: 35px;
+            }
+            
+        }
+        @media (orientation: landscape)  and (min-width: 1024px){
+            header{
+                height: 120px;
+            }
+            
+        }
+
+        /* Estilos para la imagen en header */
+        .imagen {
+            width: 100px;
+            height: auto;
+            border-radius: 6%;
+            transition: transform 0.5s ease;
+        }
+
+        .imagen:hover {
+            transform: scale(1.1);
+        }
+
+        /* Estilos para el botón de menú en móviles */
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-toggle div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        /* Estilos para submenús en navegación */
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            width: 200px;
+            list-style: none;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav ul li:hover>ul {
+            display: block;
+        }
+
+        /* Estilos para pantallas pequeñas */
+        @media (max-width: 500px) {
+            nav {
+                display: none;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                background-color: #333;
+                width: 300px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            }
+
+            nav.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+        }
+
+        /* Estilos para la imagen principal */
+        .imagen2 {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            display: block;
+            padding-bottom: 20px;
+        }
+
+        /* Estilos para las secciones */
+        section {
+            padding: 50px 30px;
+            background-color: #f8f8f8;
+        }
+
+        /* Estilos para el mensaje */
+        .h3mensaje {
+            text-align: center;
+            padding-left: 10px;
+            padding-bottom: 10px;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        /* Estilos para el contenedor principal */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            padding: 50px;
+            background-color: white;
+            margin: 30px auto;
+            max-width: 1200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos para el formulario de contacto y la información */
+        .contact-form,
+        .info-container {
+            width: 48%;
+        }
+
+        /* Estilos para el formulario de contacto */
+        .contact-form {
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        /* Estilos para los campos del formulario */
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Estilos para el botón de envío */
+        .contact-form button {
+            background-color: #e67e22;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+
+        .contact-form button:hover {
+            background-color: #d35400;
+        }
+
+        /* Estilos para el mapa */
+        #map {
+            height: 450px;
+            width: 100%;
+            max-width: 900px;
+            margin: 50px auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilos para el contenedor de información */
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* Estilos para los elementos dentro de la información */
+        .info-item {
+            width: 45%;
+            margin-bottom: 20px;
+        }
+
+        .info-container h2 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            width: 100%;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        /* Estilos para los párrafos en los elementos de información */
+        .info-item p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .info-item p strong {
+            color: #e67e22;
+        }
+
+        /* Estilos para los enlaces en los elementos de información */
+        .info-item a {
+            color: black;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .info-item a:hover {
+            color: #d35400;
+        }
+
+        /* Estilos para los iconos de redes sociales */
+        .social-media {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .social-media img {
+            width: 30px;
+            height: auto;
+        }
+
+        /* Estilos para el título del mapa */
+        .h2mapa {
+            font-size: 32px;
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid gray;
+            padding-bottom: 5px;
+            display: inline-block;
+            margin-left: 45%;
+            margin-right: 50%;
+            font-family: 'Maxlock', sans-serif;
+        }
+
+        /* Estilos para pantallas más pequeñas */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .contact-form,
+            .info-container {
+                width: 100%;
+            }
+
+            .info-item {
+                width: 100%;
+            }
+
+            #map {
+                height: 350px;
+            }
+
+            .info-container {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Estilos para la imagen con efecto hover */
+        .imagen2 {
+            width: 100%;
+            height: 550px;
+            object-fit: cover;
+            display: block;
+            padding-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .imagen2:hover {
+            transform: scale(1.05);
+        }
+
+        /* Estilos para el fondo parallax */
+        .parallax {
+            background-image: url('img/FotosGenerales/barberia-vigo.jpg');
+            height: 550px;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /* Estilos para el footer */
+        footer {
+            background-color: #222;
+            color: #f8f8f8;
+            text-align: center;
+            padding: 20px 30px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Estilos para el texto del footer */
+        footer p {
+            font-size: 16px;
+            color: #bbb;
+        }
+
+        /* Estilos para los enlaces del footer */
+        footer a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos para el pie de página */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* Estilos para el texto en el pie de página */
+        .PieDePagina {
+            color: #bbb;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <!-- Enlace al logo que lleva a la página principal -->
+        <a href="portadah.html">
+            <img class="imagen" src="img/FotosGenerales/LogoBarberia.png" alt="Logo de la Peluquería">
+        </a>
+        <!-- Menú de hamburguesa para móviles -->
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <!-- Menú de navegación -->
+        <nav id="menu">
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="pagina2.html">Equipo</a></li>
+                <li><a href="pagina3.html">Servicios</a></li>
+                <li><a href="pagina4.html">Contacto</a></li>
+                <li><a href="AcercaDe.html">Acerca de</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Imagen de parallax -->
+        <div class="parallax"></div>
+
+        <!-- Sección de contacto -->
+        <section id="inicio">
+            <div class="container">
+                <!-- Formulario de contacto -->
+                <div class="contact-form">
+                    <h3 class="h3mensaje">Envíanos un mensaje</h3>
+                    <form>
+                        <input type="email" name="email" placeholder="Tu correo electrónico" required>
+                        <input type="text" name="subject" placeholder="Asunto" required>
+                        <textarea name="message" rows="5" placeholder="Tu mensaje" required></textarea>
+                        <button type="submit">Enviar</button>
+                    </form>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="info-container">
+                    <h2 class="h3mensaje">Más Información</h2>
+                    <div class="info-item">
+                        <p><strong><img src="img/Contacta/edificios.png" alt="" width="25px"> Nombre de la
+                                Empresa:</strong> Peluquería Barbers</p>
+                        <p><strong><img src="img/Contacta/ubicacion.png" alt="" width="25px"> Dirección:</strong> Aguadulce, Almería</p>
+                    </div>
+                    <div class="info-item">
+                        <p><strong><img src="img/Contacta/telefono.png" alt="" width="25px"> Teléfono:</strong><br><a
+                                href="tel:+34600123456">+34 </a></p>
+                        <p><strong><img src="img/Contacta/correo.png" alt="" width="25px"> Correo Electrónico:</strong>
+                            <a href="Ejemplo@gmail.com">ejemplo del correo @barbershop.com</a></p>
+                    </div>
+
+                    <!-- Redes sociales -->
+                    <div class="social-media">
+                        <a href="https://instagram.com" target="_blank"><img src="img/Contacta/instagram.png"
+                                alt="Instagram" /></a>
+                        <a href="https://twitter.com" target="_blank"><img src="img/Contacta/gorjeo.png"
+                                alt="Twitter" /></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Pie de página -->
+    <footer>
+        <p>
+            <a href="AcercaDe.html" class="PieDePagina">Esta es una empresa ficticia y este sitio web es un proyecto de
+                prácticas.<br> © 2025 Peluquería Barbers. Todos los derechos reservados.</a>
+        </p>
+    </footer>
+
+  
+</body>
+
+</html>
