@@ -1,0 +1,209 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║              📁 ESTRUCTURA - PROYECTO BARBERÍA (BLOQUE 1)                      ║
+║                            Estado: ✅ COMPLETADO                              ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+📂 ESTRUCTURA DE CARPETAS
+════════════════════════════════════════════════════════════════════════════════
+
+Proyecto/
+│
+├── 📄 DOCUMENTACIÓN
+│   ├── README.md                  ⭐ Guía completa (LEE ESTO PRIMERO)
+│   └── INICIO_RAPIDO.txt          ⏱️  Setup en 5 minutos
+│
+├── 🔐 AUTENTICACIÓN (Bloque 1 ✅)
+│   ├── login.php                  Login con validación
+│   ├── logout.php                 Cerrar sesión
+│   └── registro.php               Formulario registro (diseño)
+│
+├── ⚙️  CONFIGURACIÓN & FUNCIONES
+│   ├── config.php                 Conexión BD + sesiones
+│   ├── funciones.php              13 funciones globales
+│   └── plantilla.php              Template HTML base
+│
+├── 👤 CLIENTE (Bloques 2-3 - Próximamente)
+│   ├── index.php
+│   ├── nueva_reserva.php
+│   ├── reservas.php
+│   └── mi_perfil.php
+│
+├── 🛡️  ADMIN (Bloque 4 - Próximamente)
+│   └── admin/
+│       ├── dashboard.php
+│       ├── usuarios.php
+│       ├── barberos.php
+│       ├── servicios.php
+│       ├── citas.php
+│       └── configuracion.php
+│
+└── 💾 BASE DE DATOS
+    └── base_de_datos/
+        ├── barberia.sql          Original (no usar)
+        └── barberia_mejorada.sql ⭐ USAR ESTA (7 tablas)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🔑 ARCHIVOS PRINCIPALES
+════════════════════════════════════════════════════════════════════════════════
+
+CONFIG.PHP (52 líneas)
+  ├─ Conexión a BD con mysqli
+  ├─ Configuración de sesiones (timeout 1 hora)
+  ├─ Variables globales accesibles desde cualquier archivo
+  └─ Requiere: Editar DB_USER y DB_PASS con tus credenciales
+
+FUNCIONES.PHP (300 líneas - 13 funciones)
+  ├─ validar_email()
+  ├─ hashear_contrasena() / verificar_contrasena()
+  ├─ obtener_usuario_por_email() / obtener_usuario()
+  ├─ verificar_autenticacion() / verificar_admin()
+  ├─ redirigir_con_mensaje() / mostrar_mensaje()
+  ├─ escapar()
+  ├─ formatear_fecha() / formatear_hora()
+  ├─ registrar_acceso()
+  └─ etc...
+
+LOGIN.PHP (220 líneas)
+  ├─ Formulario Bootstrap 5
+  ├─ Validación POST (email, contraseña)
+  ├─ Búsqueda en BD con prepared statements
+  ├─ Verificación de contraseña con bcrypt
+  └─ Creación de sesión y redirección
+
+LOGOUT.PHP (25 líneas)
+  ├─ Destruir sesión
+  ├─ Limpiar cookies
+  └─ Redireccionar a login.php
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🗄️  BASE DE DATOS (7 TABLAS)
+════════════════════════════════════════════════════════════════════════════════
+
+1. USUARIOS
+   ├─ ID_usuario (PK, autoincrement)
+   ├─ nombre, apellidos, email (UNIQUE), teléfono
+   ├─ contrasena (BCRYPT hash)
+   ├─ rol ('cliente' o 'admin')
+   ├─ fecha_registro (TIMESTAMP)
+   └─ activo (0 o 1)
+
+2. BARBEROS
+   ├─ DNI_barbero (PK)
+   ├─ nombre, apellidos, teléfono, especialidad
+   ├─ experiencia_anos, horario_inicio, horario_fin
+   ├─ dias_atiende (días laborales)
+   └─ activo (0 o 1)
+
+3. SERVICIOS
+   ├─ ID_servicio (PK, autoincrement)
+   ├─ nombre, descripcion
+   ├─ precio (DECIMAL)
+   ├─ duracion_minutos
+   └─ activo (0 o 1)
+
+4. CITAS
+   ├─ ID_cita (PK, autoincrement)
+   ├─ fecha (DATE), hora (TIME)
+   ├─ DNI_barbero (FK), ID_usuario (FK), ID_servicio (FK)
+   ├─ estado ('pendiente', 'confirmada', 'completada', 'cancelada')
+   ├─ precio_final (DECIMAL)
+   ├─ notas_cliente, notas_admin (TEXT)
+   ├─ fecha_creacion, fecha_modificacion (TIMESTAMP)
+   └─ Indexes en fecha, estado, usuario
+
+5. HORARIOS_DISPONIBLES
+   ├─ ID_horario (PK, autoincrement)
+   ├─ DNI_barbero (FK)
+   ├─ fecha (DATE)
+   ├─ hora_inicio (TIME)
+   └─ hora_fin (TIME)
+
+6. CONFIGURACION_SISTEMA
+   ├─ nombre_barberia (VARCHAR)
+   ├─ email (VARCHAR)
+   ├─ horario_apertura (TIME), horario_cierre (TIME)
+   ├─ duracion_slot_minutos (INT)
+   └─ contacto (VARCHAR)
+
+7. HISTORIAL_ACCESO
+   ├─ ID_acceso (PK, autoincrement)
+   ├─ ID_usuario (FK)
+   ├─ fecha_acceso (DATETIME)
+   ├─ ip_address (VARCHAR)
+   └─ navegador (VARCHAR)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+👤 CREDENCIALES PRUEBA
+════════════════════════════════════════════════════════════════════════════════
+
+CLIENTE:
+  Email: juan@email.com
+  Pass:  1234
+
+ADMIN:
+  Email: admin@email.com
+  Pass:  1234
+
+Todas las contraseñas están hasheadas con bcrypt.
+Hash: $2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🚀 CÓMO EMPEZAR
+════════════════════════════════════════════════════════════════════════════════
+
+1. Lee: README.md (documentación completa)
+2. O Ve: INICIO_RAPIDO.txt (setup en 5 minutos)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📊 ESTADÍSTICAS
+════════════════════════════════════════════════════════════════════════════════
+
+Archivos PHP:        4 (597 líneas totales)
+Funciones PHP:       13
+Tablas BD:           7
+Usuarios ejemplo:    5 (4 clientes + 1 admin)
+Barberos ejemplo:    2
+Servicios ejemplo:   5
+Citas ejemplo:       0 (sin citas iniciales)
+
+Líneas código:       ~2,500+
+Seguridad:           ✅ Bcrypt, sesiones, validación, SQL injection protection
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📈 FASES DE DESARROLLO
+════════════════════════════════════════════════════════════════════════════════
+
+BLOQUE 1: Backend Básico ✅ (COMPLETO)
+  ├─ Configuración BD
+  ├─ Autenticación segura
+  ├─ Funciones globales
+  └─ BD relacional (7 tablas)
+
+BLOQUE 2: Frontend Dinámico 📦 (Próximo)
+  ├─ Página principal
+  ├─ Ver servicios y barberos
+  ├─ Perfil de usuario
+  └─ Plantilla responsive
+
+BLOQUE 3: Sistema de Reservas 📦
+  ├─ Calendario interactivo
+  ├─ Crear/ver/cancelar citas
+  ├─ Validaciones complejas
+  └─ Lógica de disponibilidad
+
+BLOQUE 4: Panel Admin 📦
+  ├─ CRUD completo (usuarios, barberos, servicios, citas)
+  ├─ Dashboard con estadísticas
+  ├─ Gestión integral
+  └─ Reportes
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ ÚLTIMA ACTUALIZACIÓN: Mayo 2026
+   Estado: Bloque 1 Completado y Documentado
