@@ -69,7 +69,7 @@ $estilos_adicionales = '<style>
 
     .home-section-title {
         margin-bottom: 24px;
-        color: #ffffff !important;
+        color: #000000 !important;
     }
 
     .home-info-icon {
@@ -105,7 +105,14 @@ $estilos_adicionales = '<style>
     }
 
     .row.mb-40 .card {
-        min-height: 165px;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .home-team-row .card {
+        min-height: 260px;
     }
 
     .row.mb-40 .card .card-body {
@@ -131,6 +138,7 @@ $estilos_adicionales = '<style>
     .home-team-head {
         display: flex;
         justify-content: space-between;
+        gap: 18px;
     }
 
     .home-service-meta {
@@ -143,7 +151,13 @@ $estilos_adicionales = '<style>
     }
 
     .home-team-head {
-        align-items: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .home-team-head > div {
+        flex: 1 1 auto;
+        min-width: 190px;
     }
 
     .home-team-name-icon {
@@ -186,7 +200,8 @@ $estilos_adicionales = '<style>
         border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
-        transform: translateX(-62px);
+        transform: none;
+        margin-left: 0;
     }
 
     .home-cta {
@@ -248,7 +263,12 @@ $estilos_adicionales = '<style>
         .home-barber-photo {
             width: 150px;
             height: 150px;
-            transform: translateX(-24px);
+            transform: none;
+            margin: 20px 0 0 0;
+        }
+        .home-team-head {
+            flex-direction: column;
+            align-items: center;
         }
 
         .home-service-photo {
@@ -402,7 +422,7 @@ ob_start();
     <i class="bi bi-person-check"></i> Nuestro Equipo
 </h2>
 
-<div class="row mb-40">
+<div class="row mb-40 home-team-row">
     <?php foreach ($barberos as $barbero): ?>
     <div class="col-md-6 mb-3">
         <div class="card">

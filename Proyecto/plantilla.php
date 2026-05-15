@@ -4,6 +4,11 @@
  * Plantilla base del sitio con header y footer
  */
 
+// Headers para evitar caché
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
 ?>
 <!DOCTYPE html>
@@ -54,6 +59,9 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             min-height: 100vh;
             animation: fadeInBody 1s ease-out;
             position: relative;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
         }
 
         body::before {
@@ -63,14 +71,10 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: url('<?php echo APP_URL; ?>/assets/img/barberia-vigo.jpg');
-            background-repeat: no-repeat;
-            background-position: center top;
-            background-size: cover;
-            background-attachment: fixed;
+            background: <?php echo $es_admin_page ? 'rgba(255, 255, 255, 1)' : 'transparent'; ?>;
             z-index: -1;
             pointer-events: none;
-            opacity: <?php echo $es_admin_page ? '0' : '1'; ?>;
+            opacity: 1;
         }
 
         body::after {
@@ -80,15 +84,15 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 1.0);
+            background-color: transparent;
             z-index: 0;
             pointer-events: none;
-            opacity: <?php echo $es_admin_page ? '0' : '1'; ?>;
+            opacity: 0;
         }
 
         <?php if (!$es_admin_page): ?>
         body {
-            background: transparent;
+            background: url("<?php echo APP_URL; ?>/assets/img/barberia_vigo_blanco.png") center center / cover no-repeat;
         }
         <?php endif; ?>
 
@@ -424,8 +428,35 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             border-top: 1px solid rgba(255, 255, 255, 0.14);
         }
         
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin: 12px 0 18px;
+        }
+        
+        .footer-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .footer-links a i,
+        .footer-copy-icon {
+            margin-right: 10px;
+            font-size: 20px;
+            vertical-align: middle;
+            color: #ffffff;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        
         footer a {
-            color: var(--accent-soft);
+            color: #ffffff;
             text-decoration: none;
         }
         
@@ -651,7 +682,21 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
     
     <!-- FOOTER -->
     <footer>
-        <p>&copy; 2026 <?php echo APP_NAME; ?> - Todos los derechos reservados</p>
+        <p><i class="bi bi-shop footer-copy-icon"></i>&copy; 2026 <?php echo APP_NAME; ?> - Todos los derechos reservados</p>
+        <div class="footer-links">
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-instagram"></i> Instagram
+            </a>
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-facebook"></i> Facebook
+            </a>
+            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-twitter"></i> Twitter
+            </a>
+            <a href="mailto:info@barberia.com">
+                <i class="bi bi-envelope"></i> info@barberia.com
+            </a>
+        </div>
         <small>Proyecto Final de Curso - Desarrollo Web</small>
     </footer>
     
