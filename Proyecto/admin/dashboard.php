@@ -1,353 +1,229 @@
 <?php
-/**
+/*
  * admin/dashboard.php
+ * ===================
  * Pantalla principal del panel de administración.
+ * Muestra estadísticas rápidas (total de usuarios, barberos,
+ * servicios y citas), las próximas citas del día,
+ * y enlaces directos a las secciones de gestión.
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// Solo administradores pueden ver esta página
 verificar_autenticacion();
 verificar_admin();
 
 $titulo_pagina = 'Dashboard Admin - ' . APP_NAME;
 
-// Datos generales para el panel
+// Cargar la configuración del sistema
 $config = obtener_config_sistema($mysqli);
 
-// TOTAL USUARIOS
+// ---------------------------------------------------------------
+// CONTEO DE DATOS GENERALES
+// ---------------------------------------------------------------
+
+// Total de clientes activos registrados
 $query_usuarios = "SELECT COUNT(*) as total FROM usuarios WHERE rol = 'cliente' AND activo = 1";
 $total_usuarios = $mysqli->query($query_usuarios)->fetch_assoc()['total'];
 
-// TOTAL BARBEROS
+// Total de barberos activos
 $query_barberos = "SELECT COUNT(*) as total FROM barberos WHERE activo = 1";
 $total_barberos = $mysqli->query($query_barberos)->fetch_assoc()['total'];
 
-// TOTAL SERVICIOS
+// Total de servicios activos
 $query_servicios = "SELECT COUNT(*) as total FROM servicios WHERE activo = 1";
 $total_servicios = $mysqli->query($query_servicios)->fetch_assoc()['total'];
 
-// TOTAL CITAS
+// Total de citas registradas
 $query_citas = "SELECT COUNT(*) as total FROM citas";
 $total_citas = $mysqli->query($query_citas)->fetch_assoc()['total'];
 
-// CITAS DE HOY
-$query_hoy = "SELECT COUNT(*) as total FROM citas WHERE fecha = '" . date('Y-m-d') . "'";
-$citas_hoy = $mysqli->query($query_hoy)->fetch_assoc()['total'];
+// ---------------------------------------------------------------
+// CITAS DEL DÍA DE HOY
+// ---------------------------------------------------------------
+$fecha_hoy = date('Y-m-d');
+$query_citas_hoy = "SELECT c.*, u.nombre as nombre_cliente, u.email, b.nombre as barbero_nombre, b.apellidos as barbero_apellidos, s.nombre as servicio_nombre, s.duracion_minutos
+                     FROM citas c
+                     JOIN usuarios u ON c.ID_usuario = u.ID_usuario
+                     JOIN barberos b ON c.DNI_barbero = b.DNI_barbero
+                     JOIN servicios s ON c.ID_servicio = s.ID_servicio
+                     WHERE c.fecha = '$fecha_hoy'
+                     ORDER BY c.hora ASC";
+$resultado_hoy = $mysqli->query($query_citas_hoy);
+$citas_hoy = $resultado_hoy ? $resultado_hoy->fetch_all(MYSQLI_ASSOC) : [];
 
-// INGRESOS TOTALES
-$query_ingresos = "SELECT SUM(precio_final) as total FROM citas WHERE estado = 'completada'";
-$ingresos = $mysqli->query($query_ingresos)->fetch_assoc()['total'] ?? 0;
-
-// CITAS PENDIENTES DE CONFIRMACIÓN
-$query_pendientes = "SELECT COUNT(*) as total FROM citas WHERE estado = 'pendiente'";
-$citas_pendientes = $mysqli->query($query_pendientes)->fetch_assoc()['total'];
-
-// PRÓXIMAS CITAS
-$query_proximas = "SELECT * FROM citas 
-                   WHERE fecha >= '" . date('Y-m-d') . "' 
-                   AND estado != 'cancelada'
-                   ORDER BY fecha, hora
-                   LIMIT 5";
-$proximas_citas = $mysqli->query($query_proximas)->fetch_all(MYSQLI_ASSOC);
-
-// Enriquecer cada cita con datos del usuario, barbero y servicio
-foreach ($proximas_citas as &$cita) {
-    $usuario = obtener_usuario($cita['ID_usuario'], $mysqli);
-    $cita['cliente_nombre'] = $usuario['nombre'] ?? 'N/A';
-    
-    $barbero = obtener_barbero($cita['DNI_barbero'], $mysqli);
-    $cita['barbero_nombre'] = $barbero['nombre'] ?? 'N/A';
-    $cita['barbero_apellidos'] = $barbero['apellidos'] ?? '';
-    
-    $servicio = obtener_servicio($cita['ID_servicio'], $mysqli);
-    $cita['servicio_nombre'] = $servicio['nombre'] ?? 'N/A';
-}
-
+// ---------------------------------------------------------------
+// ESTILOS ADICIONALES (CSS embebido)
+// ---------------------------------------------------------------
 $estilos_adicionales = '<style>
-    .admin-metric-icon {
-        font-size: 32px;
-        margin-bottom: 10px;
-        display: block;
+    .dashboard-card {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
     }
 
-    .admin-metric-value {
-        color: #e39a56;
-        font-weight: bold;
+    .dashboard-icon-bg {
+        font-size: 38px;
+        color: #000000;
     }
 
-    .admin-kpi-card {
-        border-left: 4px solid rgba(227, 154, 86, 0.7) !important;
+    .dashboard-stat {
+        font-size: 36px;
+        font-weight: 700;
+        color: #171717;
     }
 
-    .admin-kpi-card .admin-kpi-value {
-        color: #e39a56;
-        font-weight: bold;
+    .dashboard-label {
+        font-size: 14px;
+        color: #606060;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
     }
 
-    .admin-shortcut {
+    .cita-hoy-card {
+        border-left: 4px solid #e39a56;
+        margin-bottom: 12px;
+    }
+
+    .cita-hoy-hora {
+        font-weight: 700;
+        color: #171717;
+        font-size: 18px;
+    }
+
+    .cita-hoy-cliente {
+        font-weight: 600;
+    }
+
+    .quick-link {
         text-decoration: none;
-        color: inherit;
-        display: block;
-        height: 100%;
+        color: #171717;
+        transition: 0.2s;
     }
 
-    .admin-shortcut .card-body {
-        min-height: 150px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-
-    .admin-shortcut i {
-        font-size: 32px;
+    .quick-link:hover {
         color: #e39a56;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    h1 {
-        color: #000000 !important;
-    }
-
-    h5 {
-        color: #000000 !important;
-    }
-
-    .card-header h5 {
-        color: #e39a56 !important;
-    }
-
-    .card-header h5 i {
-        color: #ffffff !important;
-    }
-
-    .table td,
-    .table th,
-    .table small,
-    .table .text-muted {
-        color: #171717 !important;
     }
 </style>';
 
 ob_start();
 ?>
 
-<h1 class="mb-30">
-    <i class="bi bi-speedometer2"></i> Panel administrativo
-</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+    <span class="text-muted">
+        <i class="bi bi-calendar"></i> <?php echo formatear_fecha($fecha_hoy); ?>
+    </span>
+</div>
 
-<!-- ESTADÍSTICAS PRINCIPALES -->
-<div class="row mb-40">
+<!-- TARJETAS DE ESTADÍSTICAS RÁPIDAS -->
+<div class="row mb-4">
     <div class="col-md-3 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="admin-metric-icon">👥</div>
-                <h6 class="text-muted">Clientes Registrados</h6>
-                <h3 class="admin-metric-value mb-0">
-                    <?php echo $total_usuarios; ?>
-                </h3>
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <i class="bi bi-people dashboard-icon-bg"></i>
+                <h3 class="dashboard-stat"><?php echo $total_usuarios; ?></h3>
+                <p class="dashboard-label">Usuarios</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="admin-metric-icon">💈</div>
-                <h6 class="text-muted">Barberos Activos</h6>
-                <h3 class="admin-metric-value mb-0">
-                    <?php echo $total_barberos; ?>
-                </h3>
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge dashboard-icon-bg"></i>
+                <h3 class="dashboard-stat"><?php echo $total_barberos; ?></h3>
+                <p class="dashboard-label">Barberos</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="admin-metric-icon">✂️</div>
-                <h6 class="text-muted">Servicios Disponibles</h6>
-                <h3 class="admin-metric-value mb-0">
-                    <?php echo $total_servicios; ?>
-                </h3>
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <i class="bi bi-scissors dashboard-icon-bg"></i>
+                <h3 class="dashboard-stat"><?php echo $total_servicios; ?></h3>
+                <p class="dashboard-label">Servicios</p>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="admin-metric-icon">📅</div>
-                <h6 class="text-muted">Total de Citas</h6>
-                <h3 class="admin-metric-value mb-0">
-                    <?php echo $total_citas; ?>
-                </h3>
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check dashboard-icon-bg"></i>
+                <h3 class="dashboard-stat"><?php echo $total_citas; ?></h3>
+                <p class="dashboard-label">Citas</p>
             </div>
         </div>
     </div>
 </div>
-
-<!-- ESTADÍSTICAS DE HOY E INGRESOS -->
-<div class="row mb-40">
-    <div class="col-md-4 mb-3">
-        <div class="card admin-kpi-card">
-            <div class="card-body">
-                <h6 class="text-muted mb-2">Citas de Hoy</h6>
-                <h3 class="admin-kpi-value mb-0">
-                    <?php echo $citas_hoy; ?>
-                </h3>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-3">
-        <div class="card admin-kpi-card">
-            <div class="card-body">
-                <h6 class="text-muted mb-2">Citas Pendientes</h6>
-                <h3 class="admin-kpi-value mb-0">
-                    <?php echo $citas_pendientes; ?>
-                </h3>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-3">
-        <div class="card admin-kpi-card">
-            <div class="card-body">
-                <h6 class="text-muted mb-2">Ingresos Totales</h6>
-                <h3 class="admin-kpi-value mb-0">
-                    €<?php echo number_format($ingresos, 2, ',', '.'); ?>
-                </h3>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- PRÓXIMAS CITAS -->
-<div class="card mb-40">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="bi bi-calendar-event"></i> Próximas Citas
-        </h5>
-    </div>
-    <div class="card-body">
-        <?php if (empty($proximas_citas)): ?>
-            <div class="no-data">
-                <p>No hay citas próximas</p>
-            </div>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha y Hora</th>
-                            <th>Cliente</th>
-                            <th>Barbero</th>
-                            <th>Servicio</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($proximas_citas as $cita): ?>
-                        <tr>
-                            <td>
-                                <strong><?php echo formatear_fecha($cita['fecha']); ?></strong><br>
-                                <small class="text-muted"><?php echo formatear_hora($cita['hora']); ?></small>
-                            </td>
-                            <td><?php echo e($cita['cliente_nombre'] ?? 'N/A'); ?></td>
-                            <td><?php echo e(trim(($cita['barbero_nombre'] ?? '') . ' ' . ($cita['barbero_apellidos'] ?? '')) ?: 'N/A'); ?></td>
-                            <td><?php echo e($cita['servicio_nombre'] ?? 'N/A'); ?></td>
-                            <td>
-                                <span class="badge badge-estado-<?php echo $cita['estado']; ?>">
-                                    <?php echo ucfirst($cita['estado']); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <a href="citas.php?editar=<?php echo $cita['ID_cita']; ?>" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-pencil"></i> Editar
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            
-            <a href="citas.php" class="btn btn-secondary mt-2">
-                Ver Todas las Citas
-            </a>
-        <?php endif; ?>
-    </div>
-</div>
-
-<!-- ACCESOS RÁPIDOS -->
-<h5 class="mb-3">
-    <i class="bi bi-lightning"></i> Accesos Rápidos
-</h5>
 
 <div class="row">
-    <div class="col-md-6 mb-3">
-        <a href="usuarios.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-people"></i>
-                <h6>Gestionar Usuarios</h6>
-                <small class="text-muted">Ver, editar y eliminar clientes</small>
+    <!-- CITAS DE HOY -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar-day"></i> Citas de Hoy (<?php echo count($citas_hoy); ?>)</h5>
             </div>
-        </a>
+            <div class="card-body">
+                <?php if (empty($citas_hoy)): ?>
+                    <p class="text-muted mb-0">No hay citas programadas para hoy.</p>
+                <?php else: ?>
+                    <?php foreach ($citas_hoy as $cita): ?>
+                    <div class="cita-hoy-card p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="cita-hoy-hora"><?php echo formatear_hora($cita['hora']); ?></span>
+                                <span class="ms-3 cita-hoy-cliente"><?php echo e($cita['nombre_cliente']); ?></span>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-person-badge"></i> <?php echo e($cita['barbero_nombre'] . ' ' . $cita['barbero_apellidos']); ?>
+                                    <i class="bi bi-scissors ms-2"></i> <?php echo e($cita['servicio_nombre']); ?>
+                                    (<?php echo $cita['duracion_minutos']; ?> min)
+                                </small>
+                            </div>
+                            <span class="badge badge-estado-<?php echo $cita['estado']; ?>">
+                                <i class="bi bi-circle-fill"></i> <?php echo ucfirst($cita['estado']); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
     
-    <div class="col-md-6 mb-3">
-        <a href="barberos.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-person-badge"></i>
-                <h6>Gestionar Barberos</h6>
-                <small class="text-muted">Crear, editar y asignar horarios</small>
+    <!-- ACCESOS RÁPIDOS -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Acceso Rápido</h5>
             </div>
-        </a>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <a href="servicios.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-scissors"></i>
-                <h6>Gestionar Servicios</h6>
-                <small class="text-muted">Crear, editar y establecer precios</small>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="citas.php" class="list-group-item list-group-item-action quick-link">
+                        <i class="bi bi-calendar-check"></i> Gestionar Citas
+                    </a>
+                    <a href="usuarios.php" class="list-group-item list-group-item-action quick-link">
+                        <i class="bi bi-people"></i> Gestionar Usuarios
+                    </a>
+                    <a href="barberos.php" class="list-group-item list-group-item-action quick-link">
+                        <i class="bi bi-person-badge"></i> Gestionar Barberos
+                    </a>
+                    <a href="servicios.php" class="list-group-item list-group-item-action quick-link">
+                        <i class="bi bi-scissors"></i> Gestionar Servicios
+                    </a>
+                    <a href="configuracion.php" class="list-group-item list-group-item-action quick-link">
+                        <i class="bi bi-gear"></i> Configuración
+                    </a>
+                </div>
             </div>
-        </a>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <a href="citas.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-calendar-check"></i>
-                <h6>Gestionar Citas</h6>
-                <small class="text-muted">Confirmar, completar y cancelar citas</small>
-            </div>
-        </a>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <a href="configuracion.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-gear"></i>
-                <h6>Configuración</h6>
-                <small class="text-muted">Ajustes generales del sistema</small>
-            </div>
-        </a>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <a href="../index.php" class="card admin-shortcut">
-            <div class="card-body text-center">
-                <i class="bi bi-house"></i>
-                <h6>Salir al Sitio</h6>
-                <small class="text-muted">Ver la página pública</small>
-            </div>
-        </a>
+        </div>
     </div>
 </div>
 

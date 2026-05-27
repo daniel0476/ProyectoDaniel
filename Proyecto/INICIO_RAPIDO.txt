@@ -1,12 +1,12 @@
 ╔════════════════════════════════════════════════════════════════════════════════╗
-║              🚀 GUÍA RÁPIDA - PROYECTO BARBERÍA (5 MINUTOS)                   ║
+              🚀 GUÍA RÁPIDA - PROYECTO BARBERÍA                               
 ╚════════════════════════════════════════════════════════════════════════════════╝
 
-⏱️  TIEMPO TOTAL: 5 minutos
+
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-✅ PASO 1: COPIAR PROYECTO (1 minuto)
+✅ PASO 1: COPIAR PROYECTO 
 ─────────────────────────────────────────────────────────────────────────────────
 
 Copia la carpeta Proyecto a:
@@ -16,7 +16,7 @@ Copia la carpeta Proyecto a:
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-✅ PASO 2: CREAR BASE DE DATOS (2 minutos)
+✅ PASO 2: CREAR BASE DE DATOS 
 ─────────────────────────────────────────────────────────────────────────────────
 
 1. Abre: http://localhost/phpmyadmin
@@ -31,7 +31,7 @@ Copia la carpeta Proyecto a:
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-✅ PASO 3: CONFIGURAR CONEXIÓN (1 minuto)
+✅ PASO 3: CONFIGURAR CONEXIÓN 
 ─────────────────────────────────────────────────────────────────────────────────
 
 Abre: config.php
@@ -46,7 +46,7 @@ Guarda (Ctrl+S)
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-✅ PASO 4: PROBAR LOGIN (1 minuto)
+✅ PASO 4: PROBAR LOGIN 
 ─────────────────────────────────────────────────────────────────────────────────
 
 URL: http://localhost/barberia/login.php
@@ -93,7 +93,7 @@ Ver: README.md (documentación completa)
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-⚙️  PASO 4: CONFIGURAR CONEXIÓN (1 minuto)
+⚙️  PASO 4: CONFIGURAR CONEXIÓN 
 ─────────────────────────────────────────────────────────────────────────────────
 
 1. Abre: C:\xampp\htdocs\barberia\config.php
@@ -106,17 +106,16 @@ Ver: README.md (documentación completa)
    │ define('DB_NAME', 'barberia');       // ← OK                       │
    └────────────────────────────────────────────────────────────────────┘
 
-3. ¿Tienes contraseña en MySQL? Si sí:
+3. ¿Tienes contraseña en MySQL?:
    Cambia: define('DB_PASS', ''); 
    Por:    define('DB_PASS', 'tu_contraseña');
 
-4. Guarda el archivo (Ctrl+S)
 
 ✅ Conexión configurada
 
 ═════════════════════════════════════════════════════════════════════════════════
 
-🚀 PASO 5: INICIAR LA APLICACIÓN (Menos de 1 minuto)
+🚀 PASO 5: INICIAR LA APLICACIÓN 
 ─────────────────────────────────────────────────────────────────────────────────
 
 1. ASEGÚRATE QUE XAMPP/WAMP ESTÉ CORRIENDO:
@@ -129,75 +128,9 @@ Ver: README.md (documentación completa)
 3. Escribe en la barra de dirección:
    http://localhost/barberia/
 
-4. ¡Deberías ver la página principal! 🎉
+4. ¡Deberías ver la página principal! 
 
-═════════════════════════════════════════════════════════════════════════════════
 
-🔑 PASO 6: PRUEBA LAS CREDENCIALES POR DEFECTO (1 minuto)
-─────────────────────────────────────────────────────────────────────────────────
-
-CLIENTE:
-┌────────────────────────────────────────────────────────────────────┐
-│ 1. Click "Iniciar Sesión"                                          │
-│ 2. Email:       juan@email.com                                     │
-│ 3. Contraseña:  1234                                              │
-│ 4. Dale al botón "Iniciar Sesión"                                │
-│ 5. ✅ ¡Estás dentro como cliente!                                 │
-│                                                                    │
-│ Ahora puedes:                                                      │
-│   • Ver la página principal                                        │
-│   • Hacer clic en "Nueva Reserva"                                 │
-│   • Ver "Mis Reservas"                                            │
-│   • Editar tu perfil                                              │
-└────────────────────────────────────────────────────────────────────┘
-
-ADMIN:
-┌────────────────────────────────────────────────────────────────────┐
-│ 1. Primero, click "Salir" (si estabas logueado)                   │
-│ 2. Click "Iniciar Sesión"                                          │
-│ 3. Email:       admin@email.com                                    │
-│ 4. Contraseña:  1234                                              │
-│ 5. Dale al botón                                                   │
-│ 6. ✅ ¡Te dirige automáticamente al Admin Panel!                  │
-│                                                                    │
-│ Ahora puedes acceder a:                                            │
-│   • Dashboard (estadísticas)                                       │
-│   • Usuarios (CRUD clientes)                                       │
-│   • Barberos (CRUD profesionales)                                  │
-│   • Servicios (CRUD servicios)                                     │
-│   • Citas (gestionar reservas)                                     │
-│   • Configuración (ajustes)                                        │
-└────────────────────────────────────────────────────────────────────┘
-
-═════════════════════════════════════════════════════════════════════════════════
-
-🎮 PRUEBA RÁPIDA - FLUJO COMPLETO (5 minutos extra)
-─────────────────────────────────────────────────────────────────────────────────
-
-COMO CLIENTE:
-┌────────────────────────────────────────────────────────────────────┐
-│ 1. Login con: juan@email.com / 1234                               │
-│ 2. Verás la página principal con servicios disponibles             │
-│ 3. Click "Nueva Reserva"                                           │
-│ 4. Selecciona un servicio (ej: "Corte de pelo")                   │
-│ 5. Selecciona un barbero (ej: "Carlos Gomez")                     │
-│ 6. Selecciona fecha: mañana o próximo día                         │
-│ 7. Selecciona una hora (ej: 10:00)                                │
-│ 8. Click "Confirmar Reserva"                                       │
-│ 9. ✅ Verás mensaje "¡Cita reservada con éxito!"                 │
-│ 10. Ahora ve a "Mis Reservas" y verás tu cita ✅                  │
-└────────────────────────────────────────────────────────────────────┘
-
-COMO ADMIN:
-┌────────────────────────────────────────────────────────────────────┐
-│ 1. Login con: admin@email.com / 1234                              │
-│ 2. Te lleva directamente al Dashboard                              │
-│ 3. Verás estadísticas (clientes, barberos, citas, etc.)           │
-│ 4. Click en "Gestionar Citas" o en del menu superior              │
-│ 5. Verás la cita pendiente que creó Juan                          │
-│ 6. Cambia el estado a "confirmada"                                │
-│ 7. ¡Vuelve a cliente y verás el estado actualizado! ✅            │
-└────────────────────────────────────────────────────────────────────┘
 
 ═════════════════════════════════════════════════════════════════════════════════
 
@@ -237,7 +170,7 @@ NO TOQUES:
 INFORMACIÓN ÚTIL:
   └─ C:\xampp\htdocs\barberia\README.md (documentación completa)
   └─ C:\xampp\htdocs\barberia\PROYECTO_RESUMEN.txt (este archivo)
-   └─ C:\xampp\htdocs\barberia\VALIDACION_FINAL_10_MIN.txt (checklist final)
+
 
 ═════════════════════════════════════════════════════════════════════════════════
 
@@ -254,46 +187,8 @@ Antes de continuar, comprueba:
 [ ] Login funciona con juan@email.com/1234
 [ ] Admin login funciona con admin@email.com/1234
 
-¿Todo verde? ✅ ¡LISTO PARA PROBAR EN REAL!
 
-═════════════════════════════════════════════════════════════════════════════════
 
-🎓 PRÓXIMOS PASOS
-─────────────────────────────────────────────────────────────────────────────────
 
-1. Explora la aplicación como cliente
-2. Explora el panel admin
-3. Lee README.md para documentación completa
-4. Personaliza datos (nombre barbería, servicios, etc.)
-5. ¡Usa este proyecto como base para tu presentación final!
 
-═════════════════════════════════════════════════════════════════════════════════
 
-📞 SOPORTE
-─────────────────────────────────────────────────────────────────────────────────
-
-Si tienes dudas:
-  1. Lee el archivo README.md (muy completo)
-  2. Revisa el FAQ al final del README
-  3. Comprueba que todos los archivos estén en su lugar
-  4. Verifica la conexión a BD en config.php
-
-═════════════════════════════════════════════════════════════════════════════════
-
-¡FELICIDADES! 🎉
-
-Tu sistema está preparado para validación final.
-
-Siguiente objetivo recomendado:
-   ✅ Probar flujo completo cliente/admin en navegador
-   ✅ Verificar reservas con varias fechas/horas
-   ✅ Confirmar cambios de estado de citas desde admin
-   ✅ Revisar logs de Apache/PHP si aparece cualquier warning
-
-═════════════════════════════════════════════════════════════════════════════════
-                    ¡A PROGRAMAR! 💪 - ÉXITO EN TU PROYECTO 📚
-═════════════════════════════════════════════════════════════════════════════════
-
-Generado: 07/04/2026
-Versión: 1.1 Revisada
-Estado: ✅ LISTO PARA VALIDACIÓN FINAL

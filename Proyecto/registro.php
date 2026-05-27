@@ -1,7 +1,11 @@
 <?php
-/**
+/*
  * registro.php
- * Registro de nuevos clientes.
+ * ============
+ * Página de registro de nuevos clientes.
+ * Valida los campos del formulario, comprueba que el email no exista,
+ * crea el usuario en la base de datos e inicia sesión automáticamente.
+ * Incluye validación tanto en servidor (PHP) como en cliente (JS).
  */
 
 require_once 'config.php';
@@ -9,7 +13,7 @@ require_once 'funciones.php';
 
 $titulo_pagina = 'Registro - ' . APP_NAME;
 
-// Si ya hay sesión, no hace falta volver a registrarse
+// Si ya hay sesión activa, redirigimos al inicio
 if ($usuario_logueado) {
     header('Location: index.php');
     exit;
@@ -18,10 +22,13 @@ if ($usuario_logueado) {
 $error = '';
 $exito = '';
 
-// Procesar el envío del formulario de registro
+// ---------------------------------------------------------------
+// PROCESAR EL FORMULARIO DE REGISTRO
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Recoger los datos del formulario
     $nombre = trim($_POST['nombre'] ?? '');
     $apellidos = trim($_POST['apellidos'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -29,7 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contrasena = trim($_POST['contrasena'] ?? '');
     $contrasena_confirmar = trim($_POST['contrasena_confirmar'] ?? '');
     
-    // Validar datos
+    // ---------------------------------------------------------------
+    // VALIDACIONES DEL LADO DEL SERVIDOR
+    // ---------------------------------------------------------------
     if (empty($nombre) || empty($apellidos) || empty($email) || empty($contrasena)) {
         $error = 'Por favor, completa todos los campos requeridos.';
     } elseif (!validar_email($email)) {
@@ -39,15 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($contrasena !== $contrasena_confirmar) {
         $error = 'Las contraseñas no coinciden.';
     } else {
-        // Comprobar si el email ya está registrado
+        // Comprobar si el email ya está registrado en la BD
         $email_prep = escapar($email, $mysqli);
         $query_check = "SELECT ID_usuario FROM usuarios WHERE email = '$email_prep'";
         $resultado = $mysqli->query($query_check);
         
         if ($resultado->num_rows > 0) {
-            $error = 'El email ya está registrado. <a href="login.php">¿Inicia sesión aquí?</a>';
+            $error = 'El email ya está registrado. <a href="login.php">Inicia sesión aquí</a>';
         } else {
-            // Registrar nuevo usuario
+            // TODO OK: Insertar el nuevo usuario en la base de datos
             $nombre_prep = escapar($nombre, $mysqli);
             $apellidos_prep = escapar($apellidos, $mysqli);
             $telefono_prep = escapar($telefono, $mysqli);
@@ -57,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       VALUES ('$nombre_prep', '$apellidos_prep', '$email_prep', '$telefono_prep', '$hash_contrasena', 'cliente')";
             
             if ($mysqli->query($query)) {
-                // Automáticamente loguearse
+                // Auto-login: iniciamos sesión para el nuevo usuario
                 $usuario_nuevo = obtener_usuario_por_email($email, $mysqli);
 
                 session_regenerate_id(true);
@@ -68,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 registrar_acceso($usuario_nuevo['ID_usuario'], $mysqli);
                 
-                redirigir_con_mensaje('index.php', ' ¡Bienvenido! Tu cuenta ha sido creada exitosamente.', 'success');
+                redirigir_con_mensaje('index.php', ' Bienvenido! Tu cuenta ha sido creada exitosamente.', 'success');
             } else {
                 $error = 'Error al registrar: ' . $mysqli->error;
             }
@@ -189,7 +198,7 @@ ob_start();
             </form>
 
             <div class="register-link">
-                ¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a>
+                Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a>
             </div>
         </div>
     </div>

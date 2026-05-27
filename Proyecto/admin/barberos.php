@@ -1,14 +1,17 @@
 <?php
-/**
+/*
  * admin/barberos.php
- * Maneja barberos desde el panel administrativo.
+ * ==================
+ * Panel de gestión de barberos.
+ * Permite crear nuevos barberos, editar sus datos (incluyendo foto),
+ * y eliminarlos físicamente de la base de datos.
+ * Incluye modal con formulario y carga de imagen.
  */
-
-
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// Solo administradores pueden acceder
 verificar_autenticacion();
 verificar_admin();
 
@@ -17,10 +20,13 @@ $titulo_pagina = 'Gestión de Barberos - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Procesar creación, actualización o eliminación de barbero
+// ---------------------------------------------------------------
+// PROCESAR CREACIÓN, ACTUALIZACIÓN O ELIMINACIÓN DE BARBERO
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Eliminar barbero físicamente (DELETE real, no soft-delete)
     if (isset($_POST['eliminar'])) {
         $dni = trim($_POST['dni'] ?? '');
         $stmt = $mysqli->prepare("DELETE FROM barberos WHERE DNI_barbero = ?");
@@ -32,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     } else {
+        // Crear o actualizar barbero
         $dni = trim($_POST['dni'] ?? '');
         $nombre = trim($_POST['nombre'] ?? '');
         $apellidos = trim($_POST['apellidos'] ?? '');
@@ -42,13 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $horario_fin = trim($_POST['horario_fin'] ?? '18:00');
         $dias_atiende = trim($_POST['dias_atiende'] ?? 'Lun-Vie');
 
-        // Procesar foto
+        // Procesar la foto subida (si viene alguna)
         $foto_nombre = null;
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
             $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+            // Solo permitir formatos de imagen comunes
             if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
                 $foto_nombre = 'barbero_' . preg_replace('/[^a-zA-Z0-9]/', '_', $dni) . '.' . $ext;
                 $ruta_destino = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/equipo/' . $foto_nombre;
+                // Intentar mover el archivo subido; si falla, intentar copiar
                 if (!move_uploaded_file($_FILES['foto']['tmp_name'], $ruta_destino)) {
                     if (!copy($_FILES['foto']['tmp_name'], $ruta_destino)) {
                         $foto_nombre = null;
@@ -59,9 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Validar campos obligatorios
         if (empty($dni) || empty($nombre) || empty($apellidos)) {
             $error = 'Por favor completa los campos obligatorios.';
         } elseif (empty($error)) {
+            // Verificar si el barbero ya existe (por DNI)
             $check = $mysqli->prepare("SELECT DNI_barbero FROM barberos WHERE DNI_barbero = ? LIMIT 1");
             $check->bind_param('s', $dni);
             $check->execute();
@@ -70,15 +81,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check->close();
 
             if ($existe) {
+                // ACTUALIZAR barbero existente
                 if ($foto_nombre) {
+                    // Con foto nueva
                     $stmt = $mysqli->prepare("UPDATE barberos SET nombre = ?, apellidos = ?, telefono = ?, especialidad = ?, experiencia_anos = ?, horario_inicio = ?, horario_fin = ?, dias_atiende = ?, foto = ?, activo = 1 WHERE DNI_barbero = ?");
                     $stmt->bind_param('sssssissss', $nombre, $apellidos, $telefono, $especialidad, $experiencia_anos, $horario_inicio, $horario_fin, $dias_atiende, $foto_nombre, $dni);
                 } else {
+                    // Sin foto nueva (mantiene la actual)
                     $stmt = $mysqli->prepare("UPDATE barberos SET nombre = ?, apellidos = ?, telefono = ?, especialidad = ?, experiencia_anos = ?, horario_inicio = ?, horario_fin = ?, dias_atiende = ?, activo = 1 WHERE DNI_barbero = ?");
                     $stmt->bind_param('sssssisss', $nombre, $apellidos, $telefono, $especialidad, $experiencia_anos, $horario_inicio, $horario_fin, $dias_atiende, $dni);
                 }
                 $exito = ' Barbero actualizado correctamente.';
             } else {
+                // CREAR nuevo barbero
                 $stmt = $mysqli->prepare("INSERT INTO barberos (DNI_barbero, nombre, apellidos, telefono, especialidad, experiencia_anos, horario_inicio, horario_fin, dias_atiende, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param('sssssissss', $dni, $nombre, $apellidos, $telefono, $especialidad, $experiencia_anos, $horario_inicio, $horario_fin, $dias_atiende, $foto_nombre);
                 $exito = ' Barbero creado correctamente.';
@@ -94,7 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Traer los barberos activos para mostrar en la tabla
+// ---------------------------------------------------------------
+// OBTENER LISTA DE BARBEROS ACTIVOS
+// ---------------------------------------------------------------
 $barberos = $mysqli->query("SELECT * FROM barberos WHERE activo = 1 ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
 
 $estilos_adicionales = '<style>
@@ -136,6 +153,7 @@ ob_start();
     </div>
 </div>
 
+<!-- Mensajes de error/éxito -->
 <?php if (!empty($error)): ?>
     <div class="alert alert-danger"><?php echo $error; ?></div>
 <?php endif; ?>
@@ -144,7 +162,7 @@ ob_start();
     <div class="alert alert-success"><?php echo $exito; ?></div>
 <?php endif; ?>
 
-<!-- LISTA DE BARBEROS -->
+<!-- LISTA DE BARBEROS (tarjetas) -->
 <div class="row">
     <?php foreach ($barberos as $barbero): ?>
     <div class="col-md-6 mb-3">
@@ -152,6 +170,7 @@ ob_start();
             <div class="card-body">
                 <div class="d-flex align-items-start mb-2">
                     <div class="me-3">
+                        <!-- Foto del barbero (o icono por defecto si no tiene) -->
                         <?php if (!empty($barbero['foto'])): ?>
                             <img src="../assets/img/servir_imagen.php?tipo=barbero&archivo=<?php echo urlencode($barbero['foto']); ?>" alt="Foto" class="rounded" style="width:64px;height:64px;object-fit:cover;">
                         <?php else: ?>
@@ -168,6 +187,7 @@ ob_start();
                     </div>
                 </div>
                 
+                <!-- Datos principales del barbero -->
                 <p class="card-text text-muted mb-2">
                     <i class="bi bi-briefcase"></i> <?php echo e($barbero['especialidad']); ?>
                 </p>
@@ -179,11 +199,12 @@ ob_start();
                     <small><strong>Atiende:</strong> <?php echo e($barbero['dias_atiende']); ?></small>
                 </div>
                 
+                <!-- Botones de acción: Editar y Eliminar -->
                 <div class="mt-3 d-flex gap-2 admin-barbero-actions">
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalBarbero" onclick="cargarBarbero('<?php echo htmlspecialchars(json_encode($barbero), ENT_QUOTES, 'UTF-8'); ?>')">
                         <i class="bi bi-pencil"></i> Editar
                     </button>
-                    <form method="POST" action="barberos.php" class="d-inline" onsubmit="return confirm('¿Seguro?');">
+                    <form method="POST" action="barberos.php" class="d-inline" onsubmit="return confirm('Seguro?');">
                         <?php echo csrf_input(); ?>
                         <input type="hidden" name="eliminar" value="1">
                         <input type="hidden" name="dni" value="<?php echo e($barbero['DNI_barbero']); ?>">
@@ -198,7 +219,7 @@ ob_start();
     <?php endforeach; ?>
 </div>
 
-<!-- MODAL FORMULARIO -->
+<!-- MODAL FORMULARIO (Crear/Editar Barbero) -->
 <div class="modal fade" id="modalBarbero" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -276,6 +297,7 @@ ob_start();
     </a>
 </div>
 
+<!-- JavaScript para cargar datos en el modal al editar -->
 <script>
 function cargarBarbero(datos) {
     const barbero = JSON.parse(datos);

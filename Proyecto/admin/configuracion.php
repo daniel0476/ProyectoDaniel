@@ -1,12 +1,17 @@
 <?php
-/**
+/*
  * admin/configuracion.php
- * Ajustes generales de la barbería.
+ * ========================
+ * Panel de configuración general de la barbería.
+ * Permite modificar nombre, datos de contacto, horarios de apertura,
+ * duración de slots, tiempo de preparación entre citas
+ * y aviso de cancelación mínimo.
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// Solo administradores pueden acceder
 verificar_autenticacion();
 verificar_admin();
 
@@ -15,12 +20,16 @@ $titulo_pagina = 'Configuración - ' . APP_NAME;
 $error = '';
 $exito = '';
 
+// Cargar la configuración actual desde la base de datos
 $config = obtener_config_sistema($mysqli);
 
-// Actualizar la configuración cuando envían el formulario
+// ---------------------------------------------------------------
+// PROCESAR EL FORMULARIO DE CONFIGURACIÓN
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Recoger y sanitizar todos los campos del formulario
     $nombre_barberia = escapar(trim($_POST['nombre_barberia'] ?? ''), $mysqli);
     $email_barberia = escapar(trim($_POST['email_barberia'] ?? ''), $mysqli);
     $telefono_barberia = escapar(trim($_POST['telefono_barberia'] ?? ''), $mysqli);
@@ -32,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tiempo_preparacion = intval($_POST['tiempo_preparacion_minutos'] ?? 5);
     $aviso_cancelacion = intval($_POST['aviso_cancelacion_horas'] ?? 24);
     
+    // Actualizar todos los campos en la base de datos
     $query = "UPDATE configuracion_sistema SET 
              nombre_barberia = '$nombre_barberia',
              email_barberia = '$email_barberia',
@@ -47,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($mysqli->query($query)) {
         $exito = ' Configuración actualizada correctamente.';
+        // Recargar la configuración actualizada
         $config = obtener_config_sistema($mysqli);
     } else {
         $error = 'Error: ' . $mysqli->error;
@@ -66,6 +77,7 @@ ob_start();
     <i class="bi bi-gear"></i> Configuración del Sistema
 </h1>
 
+<!-- Mensajes de error/éxito -->
 <?php if (!empty($error)): ?>
     <div class="alert alert-danger"><?php echo $error; ?></div>
 <?php endif; ?>
@@ -83,7 +95,8 @@ ob_start();
             <div class="card-body">
                 <form method="POST">
                     <?php echo csrf_input(); ?>
-                    <!-- INFORMACIÓN DE LA BARBERÍA -->
+                    
+                    <!-- SECCIÓN: INFORMACIÓN DE LA BARBERÍA -->
                     <h6 class="mb-3 admin-config-section-title">
                         <i class="bi bi-shop"></i> Información de la Barbería
                     </h6>
@@ -117,7 +130,7 @@ ob_start();
                     
                     <hr class="my-4">
                     
-                    <!-- HORARIOS -->
+                    <!-- SECCIÓN: HORARIOS -->
                     <h6 class="mb-3 admin-config-section-title">
                         <i class="bi bi-clock"></i> Horarios
                     </h6>
@@ -135,7 +148,7 @@ ob_start();
                     
                     <hr class="my-4">
                     
-                    <!-- CONFIGURACIÓN DE CITAS -->
+                    <!-- SECCIÓN: CONFIGURACIÓN DE CITAS -->
                     <h6 class="mb-3 admin-config-section-title">
                         <i class="bi bi-calendar-event"></i> Configuración de Citas
                     </h6>
@@ -160,7 +173,7 @@ ob_start();
                     
                     <hr class="my-4">
                     
-                    <!-- BOTONES -->
+                    <!-- BOTONES DE ACCIÓN -->
                     <div class="d-flex gap-2 justify-content-between">
                         <a href="dashboard.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Volver
@@ -174,7 +187,7 @@ ob_start();
         </div>
     </div>
     
-    <!-- INFORMACIÓN ADICIONAL -->
+    <!-- BARRA LATERAL: INFORMACIÓN DEL SISTEMA Y TIPS -->
     <div class="col-md-4">
         <div class="card mb-3">
             <div class="card-header">
@@ -213,13 +226,13 @@ ob_start();
             </div>
             <div class="card-body admin-config-help">
                 <p class="mb-2">
-                    💡 Recuerda cambiar los horarios de tu barbería según tus disponibilidades.
+                    Recuerda cambiar los horarios de tu barbería según tus disponibilidades.
                 </p>
                 <p class="mb-2">
-                    💡 El tiempo de preparación se suma entre citas para evitar solapamientos.
+                    El tiempo de preparación se suma entre citas para evitar solapamientos.
                 </p>
                 <p>
-                    💡 El aviso de cancelación es el tiempo mínimo que clientes deben dejar para cancelar.
+                    El aviso de cancelación es el tiempo mínimo que clientes deben dejar para cancelar.
                 </p>
             </div>
         </div>

@@ -1,24 +1,32 @@
 <?php
-/**
+/*
  * mi_perfil.php
- * Página para editar los datos del usuario.
+ * =============
+ * Página donde el usuario puede ver y editar sus datos personales
+ * (nombre, apellidos, teléfono). También permite cambiar la contraseña
+ * si se proporciona la actual. El email no se puede modificar.
  */
 
 require_once 'config.php';
 require_once 'funciones.php';
 
+// Solo usuarios logueados pueden acceder a su perfil
 verificar_autenticacion();
 
 $titulo_pagina = 'Mi Perfil - ' . APP_NAME;
 
+// Cargar los datos actuales del usuario desde la BD
 $usuario = obtener_usuario($usuario_id, $mysqli);
 $error = '';
 $exito = '';
 
-// Procesar cambios del perfil
+// ---------------------------------------------------------------
+// PROCESAR CAMBIOS DEL PERFIL
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Recoger datos del formulario
     $nombre = trim($_POST['nombre'] ?? '');
     $apellidos = trim($_POST['apellidos'] ?? '');
     $telefono = trim($_POST['telefono'] ?? '');
@@ -26,19 +34,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contrasena_nueva = trim($_POST['contrasena_nueva'] ?? '');
     $contrasena_confirmar = trim($_POST['contrasena_confirmar'] ?? '');
     
-    // Validar la información enviada por el usuario
+    // ---------------------------------------------------------------
+    // VALIDACIONES
+    // ---------------------------------------------------------------
+    // Nombre y apellidos son obligatorios siempre
     if (empty($nombre) || empty($apellidos)) {
         $error = 'El nombre y apellidos son obligatorios.';
+    // Si quiere cambiar la contraseña, debe proporcionar la actual
     } elseif (!empty($contrasena_nueva) && empty($contrasena_actual)) {
         $error = 'Debes proporcionar tu contraseña actual para cambiarla.';
+    // Verificar que la contraseña actual sea correcta
     } elseif (!empty($contrasena_nueva) && !verificar_contrasena($contrasena_actual, $usuario['contrasena'])) {
         $error = 'La contraseña actual es incorrecta.';
+    // La nueva contraseña debe tener al menos 6 caracteres
     } elseif (!empty($contrasena_nueva) && strlen($contrasena_nueva) < 6) {
         $error = 'La nueva contraseña debe tener al menos 6 caracteres.';
+    // Confirmar que las dos contraseñas nuevas coinciden
     } elseif (!empty($contrasena_nueva) && $contrasena_nueva !== $contrasena_confirmar) {
         $error = 'Las contraseñas nuevas no coinciden.';
     } else {
-        // Actualizar los datos del perfil
+        // ---------------------------------------------------------------
+        // ACTUALIZAR DATOS BÁSICOS
+        // ---------------------------------------------------------------
         $nombre_prep = escapar($nombre, $mysqli);
         $apellidos_prep = escapar($apellidos, $mysqli);
         $telefono_prep = escapar($telefono, $mysqli);
@@ -46,24 +63,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $query = "UPDATE usuarios SET nombre = '$nombre_prep', apellidos = '$apellidos_prep', telefono = '$telefono_prep' WHERE ID_usuario = $usuario_id";
         
         if ($mysqli->query($query)) {
-            // Actualizar sesión
+            // Reflejar el cambio en la sesión inmediatamente
             $_SESSION['usuario_nombre'] = $nombre;
             
-            // Si va a cambiar contraseña
+            // ---------------------------------------------------------------
+            // CAMBIO DE CONTRASEÑA (opcional)
+            // ---------------------------------------------------------------
             if (!empty($contrasena_nueva)) {
-                // Actualizar contraseña
                 $hash_nueva = hashear_contrasena($contrasena_nueva);
                 $query_pass = "UPDATE usuarios SET contrasena = '$hash_nueva' WHERE ID_usuario = $usuario_id";
                 if ($mysqli->query($query_pass)) {
-                    $exito = '✅ Perfil y contraseña actualizados correctamente.';
+                    $exito = ' Perfil y contraseña actualizados correctamente.';
                 } else {
                     $error = 'Error al actualizar la contraseña: ' . $mysqli->error;
                 }
             } else {
-                $exito = '✅ Perfil actualizado correctamente.';
+                $exito = ' Perfil actualizado correctamente.';
             }
             
-            // Actualizar datos mostrados
+            // Recargar los datos del usuario para mostrarlos actualizados
             $usuario = obtener_usuario($usuario_id, $mysqli);
         } else {
             $error = 'Error al actualizar el perfil: ' . $mysqli->error;
@@ -83,6 +101,7 @@ ob_start();
                 </h3>
             </div>
             <div class="card-body">
+                <!-- Mensajes de error o éxito -->
                 <?php if (!empty($error)): ?>
                     <div class="alert alert-danger"><?php echo e($error); ?></div>
                 <?php endif; ?>
@@ -93,7 +112,8 @@ ob_start();
                 
                 <form method="POST" action="mi_perfil.php" class="perfil-form">
                     <?php echo csrf_input(); ?>
-                    <!-- INFORMACIÓN PERSONAL -->
+                    
+                    <!-- SECCIÓN: INFORMACIÓN PERSONAL -->
                     <h5 class="mb-3 mt-4">
                         <i class="bi bi-person-vcard"></i> Información Personal
                     </h5>
@@ -127,6 +147,7 @@ ob_start();
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="email" class="form-label">Email</label>
+                            <!-- El email es de solo lectura (no se puede cambiar) -->
                             <input 
                                 type="email" 
                                 class="form-control perfil-readonly" 
@@ -149,7 +170,7 @@ ob_start();
                         </div>
                     </div>
                     
-                    <!-- CAMBIAR CONTRASEÑA -->
+                    <!-- SECCIÓN: CAMBIAR CONTRASEÑA -->
                     <h5 class="mb-3 mt-5 border-top pt-4">
                         <i class="bi bi-lock"></i> Cambiar Contraseña (Opcional)
                     </h5>
@@ -189,7 +210,7 @@ ob_start();
                         </div>
                     </div>
                     
-                    <!-- INFORMACIÓN DE CUENTA -->
+                    <!-- SECCIÓN: INFORMACIÓN DE CUENTA (solo lectura) -->
                     <h5 class="mb-3 mt-5 border-top pt-4">
                         <i class="bi bi-info-circle"></i> Información de Cuenta
                     </h5>
@@ -216,7 +237,7 @@ ob_start();
                         </div>
                     </div>
                     
-                    <!-- BOTONES -->
+                    <!-- BOTONES DE ACCIÓN -->
                     <div class="d-flex gap-2 justify-content-between mt-5">
                         <a href="index.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Volver

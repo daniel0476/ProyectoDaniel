@@ -1,12 +1,16 @@
 <?php
-/**
+/*
  * login.php
- * Acceso para clientes y administradores.
+ * =========
+ * Página de inicio de sesión para clientes y administradores.
+ * Verifica las credenciales contra la base de datos usando bcrypt,
+ * con soporte de migración para contraseñas antiguas en texto plano.
+ * Incluye protección CSRF y detección de sesión expirada.
  */
 
 require_once 'config.php';
 
-// Si ya hay sesión, vamos al inicio
+// Si ya hay sesión activa, redirigimos al inicio
 if ($usuario_logueado) {
     header('Location: index.php');
     exit;
@@ -17,46 +21,54 @@ require_once 'funciones.php';
 $error = '';
 $exito = '';
 
-// Procesar el envío del formulario de login
+// ---------------------------------------------------------------
+// PROCESAR EL FORMULARIO DE LOGIN
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Recoger y limpiar los datos del formulario
     $email = trim($_POST['email'] ?? '');
     $contrasena = trim($_POST['contrasena'] ?? '');
     
-    // Validar datos
+    // Validar que no estén vacíos y que el email tenga formato correcto
     if (empty($email) || empty($contrasena)) {
         $error = 'Por favor, completa todos los campos.';
     } elseif (!validar_email($email)) {
         $error = 'El email no es válido.';
     } else {
-        // Buscar al usuario por email
+        // Buscar al usuario por email en la base de datos
         $usuario = obtener_usuario_por_email($email, $mysqli);
         
         $login_exitoso = false;
 
         if ($usuario) {
+            // 1) Intentar con bcrypt (método moderno)
             if (verificar_contrasena($contrasena, $usuario['contrasena'])) {
                 $login_exitoso = true;
+            // 2) Fallback: comparación en texto plano para cuentas antiguas
             } elseif ($usuario['contrasena'] === $contrasena) {
-                // Soporte para contraseñas antiguas almacenadas en texto plano
                 $login_exitoso = true;
+                // Migrar automáticamente a bcrypt en la BD
                 $nuevo_hash = hashear_contrasena($contrasena);
                 actualizar_contrasena_usuario($usuario['ID_usuario'], $nuevo_hash, $mysqli);
             }
         }
 
+        // Si las credenciales son correctas, iniciamos sesión
         if ($login_exitoso) {
+            // Regenerar ID de sesión para prevenir fijación de sesión
             session_regenerate_id(true);
+            // Guardar datos en la sesión
             $_SESSION['usuario_id'] = $usuario['ID_usuario'];
             $_SESSION['usuario_nombre'] = $usuario['nombre'];
             $_SESSION['usuario_email'] = $usuario['email'];
             $_SESSION['usuario_rol'] = $usuario['rol'];
             
-            // Registrar acceso
+            // Registrar el acceso en el historial
             registrar_acceso($usuario['ID_usuario'], $mysqli);
             
-            // Redirigir según rol
+            // Redirigir según el rol del usuario
             if ($usuario['rol'] === 'admin') {
                 header('Location: admin/dashboard.php');
             } else {
@@ -69,13 +81,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Verificar si la sesión expiró
+// ---------------------------------------------------------------
+// DETECCIÓN DE SESIÓN EXPIRADA
+// ---------------------------------------------------------------
+// Si venimos de una redirección por sesión expirada, mostrar aviso
 $sesion_expirada = isset($_GET['sesion_expirada']);
 
 $titulo_pagina = 'Login - ' . APP_NAME;
 
 ob_start();
-
 ?>
 <div class="row justify-content-center login-page-wrap">
     <div class="col-lg-5 col-md-7">
@@ -86,18 +100,21 @@ ob_start();
             <p>Accede a tu cuenta</p>
         </div>
         
+        <!-- Aviso de sesión expirada -->
         <?php if ($sesion_expirada): ?>
             <div class="alert alert-warning" role="alert">
                 Tu sesión ha expirado. Por favor, inicia sesión de nuevo.
             </div>
         <?php endif; ?>
         
+        <!-- Mensaje de error del formulario -->
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger" role="alert">
                 <?php echo e($error); ?>
             </div>
         <?php endif; ?>
         
+        <!-- Formulario de inicio de sesión -->
         <form method="POST" action="login.php">
             <?php echo csrf_input(); ?>
             <div class="mb-3">
@@ -120,7 +137,7 @@ ob_start();
                     class="form-control" 
                     id="contrasena" 
                     name="contrasena" 
-                    placeholder="••••••••"
+                    placeholder=""
                     required
                 >
             </div>
@@ -135,7 +152,7 @@ ob_start();
         </div>
         
         <div class="register-link">
-            ¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a>
+            No tienes cuenta? <a href="registro.php">Regístrate aquí</a>
         </div>
         </div>
     </div>
@@ -264,3 +281,4 @@ $estilos_adicionales = '<style>
 </style>';
 
 include 'plantilla.php';
+?>

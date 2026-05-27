@@ -4,13 +4,16 @@
  * Devuelve slots disponibles para una fecha/barbero/servicio
  */
 
+// Marcar como llamada API para que config.php no redirija al login
 define('IS_API_REQUEST', true);
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// La respuesta siempre será JSON
 header('Content-Type: application/json; charset=UTF-8');
 
+// Solo usuarios autenticados pueden consultar horarios
 if (!$usuario_logueado) {
     http_response_code(401);
     echo json_encode([

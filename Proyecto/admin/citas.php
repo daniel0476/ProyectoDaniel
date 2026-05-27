@@ -1,28 +1,37 @@
 <?php
-/**
+/*
  * admin/citas.php
- * Lista de citas y edición de estados desde el panel.
+ * ===============
+ * Panel de gestión de citas para administradores.
+ * Permite filtrar por estado y fecha, cambiar el estado
+ * de cada cita (pendiente/confirmada/completada/cancelada),
+ * ver detalles en un modal y eliminar citas con registro en log.
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// Solo administradores pueden acceder
 verificar_autenticacion();
 verificar_admin();
 
 $titulo_pagina = 'Gestión de Citas - ' . APP_NAME;
 
-// Filtramos citas y preparamos los cambios de estado
+// ---------------------------------------------------------------
+// FILTROS
+// ---------------------------------------------------------------
 $filtro_estado = trim($_GET['estado'] ?? '');
 $filtro_fecha = trim($_GET['fecha'] ?? '');
 
-// Procesar eliminación de cita
+// ---------------------------------------------------------------
+// PROCESAR ELIMINACIÓN DE CITA
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_cita'])) {
     requerir_csrf();
 
     $id = intval($_POST['id'] ?? 0);
     if ($id > 0) {
-        // Crear carpeta de logs si no existe y registrar la acción
+        // Registrar la eliminación en un archivo de log
         $logDir = __DIR__ . '/../logs';
         if (!is_dir($logDir)) {
             @mkdir($logDir, 0755, true);
@@ -36,20 +45,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_cita'])) {
     }
 }
 
-// Procesar cambio de estado
+// ---------------------------------------------------------------
+// PROCESAR CAMBIO DE ESTADO
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     requerir_csrf();
 
     $id = intval($_POST['id'] ?? 0);
     $estado = trim($_POST['nuevo_estado'] ?? '');
 
+    // Solo permitir estados válidos
     if ($id > 0 && in_array($estado, ['pendiente', 'confirmada', 'completada', 'cancelada'], true)) {
         $query = "UPDATE citas SET estado = '$estado' WHERE ID_cita = $id";
         $mysqli->query($query);
     }
 }
 
-// Preparamos la consulta con los filtros elegidos
+// ---------------------------------------------------------------
+// CONSULTA DE CITAS CON FILTROS
+// ---------------------------------------------------------------
 $query = "SELECT * FROM citas WHERE 1=1";
 
 if (!empty($filtro_estado)) {
@@ -66,20 +80,17 @@ $query .= " ORDER BY fecha DESC, hora DESC";
 
 $citas = $mysqli->query($query)->fetch_all(MYSQLI_ASSOC);
 
-// Enriquecer cada cita con datos del usuario, barbero y servicio
+// Enriquecer cada cita con datos relacionados (usuario, barbero, servicio)
 foreach ($citas as &$cita) {
-    // Obtener usuario
     $usuario = obtener_usuario($cita['ID_usuario'], $mysqli);
     $cita['cliente_nombre'] = $usuario['nombre'] ?? 'N/A';
     $cita['cliente_email'] = $usuario['email'] ?? '';
     $cita['cliente_telefono'] = $usuario['telefono'] ?? '';
     
-    // Obtener barbero
     $barbero = obtener_barbero($cita['DNI_barbero'], $mysqli);
     $cita['barbero_nombre'] = $barbero['nombre'] ?? 'N/A';
     $cita['barbero_apellidos'] = $barbero['apellidos'] ?? '';
     
-    // Obtener servicio
     $servicio = obtener_servicio($cita['ID_servicio'], $mysqli);
     $cita['servicio_nombre'] = $servicio['nombre'] ?? 'N/A';
     $cita['duracion_minutos'] = $servicio['duracion_minutos'] ?? 0;
@@ -175,7 +186,7 @@ ob_start();
     </div>
 </div>
 
-<!-- FILTROS -->
+<!-- FILTROS POR ESTADO Y FECHA -->
 <div class="card mb-3">
     <div class="card-body">
         <form method="GET" action="citas.php" class="row g-3 admin-filters">
@@ -207,7 +218,7 @@ ob_start();
     </div>
 </div>
 
-<!-- TABLA -->
+<!-- TABLA DE CITAS -->
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -238,7 +249,8 @@ ob_start();
                         <td><?php echo e($cita['servicio_nombre']); ?></td>
                         <td>€<?php echo number_format($cita['precio_final'], 2); ?></td>
                         <td class="admin-citas-state">
-                            <form method="POST" action="citas.php<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . e($_SERVER['QUERY_STRING']) : ''; ?>" onsubmit="return confirm('¿Cambiar estado de la cita?');">
+                            <!-- Select para cambiar el estado de la cita -->
+                            <form method="POST" action="citas.php<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . e($_SERVER['QUERY_STRING']) : ''; ?>" onsubmit="return confirm('Cambiar estado de la cita?');">
                                 <?php echo csrf_input(); ?>
                                 <input type="hidden" name="cambiar_estado" value="1">
                                 <input type="hidden" name="id" value="<?php echo (int)$cita['ID_cita']; ?>">
@@ -251,10 +263,12 @@ ob_start();
                             </form>
                         </td>
                         <td class="admin-citas-actions">
+                            <!-- Botón para ver detalles en modal -->
                             <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalDetalles_<?php echo $cita['ID_cita']; ?>">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <form method="POST" action="citas.php<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . e($_SERVER['QUERY_STRING']) : ''; ?>" style="display:inline;" onsubmit="return confirm('⚠️ ¿Eliminar esta cita definitivamente? Esta acción no se puede deshacer.');">
+                            <!-- Botón para eliminar la cita -->
+                            <form method="POST" action="citas.php<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . e($_SERVER['QUERY_STRING']) : ''; ?>" style="display:inline;" onsubmit="return confirm(' Eliminar esta cita definitivamente? Esta acción no se puede deshacer.');">
                                 <?php echo csrf_input(); ?>
                                 <input type="hidden" name="eliminar_cita" value="1">
                                 <input type="hidden" name="id" value="<?php echo (int)$cita['ID_cita']; ?>">
@@ -271,6 +285,7 @@ ob_start();
     </div>
 </div>
 
+<!-- MODALES DE DETALLE PARA CADA CITA -->
 <?php foreach ($citas as $cita): ?>
     <div class="modal fade" id="modalDetalles_<?php echo $cita['ID_cita']; ?>" tabindex="-1">
         <div class="modal-dialog">
@@ -311,7 +326,7 @@ ob_start();
     </a>
 </div>
 
-<!-- Modal de confirmación para eliminar cita -->
+<!-- Modal de confirmación adicional para eliminar cita -->
 <div class="modal fade" id="modalEliminar" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -324,7 +339,7 @@ ob_start();
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Eliminar esta cita definitivamente? Esta acción no se puede deshacer.</p>
+                    <p>Eliminar esta cita definitivamente? Esta acción no se puede deshacer.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

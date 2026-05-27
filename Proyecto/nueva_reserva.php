@@ -1,12 +1,17 @@
 <?php
-/**
+/*
  * nueva_reserva.php
- * Página para crear una reserva nueva.
+ * =================
+ * Página donde el cliente puede crear una nueva reserva.
+ * Muestra un formulario con selects para servicio, barbero,
+ * fecha y hora (cargadas dinámicamente vía AJAX).
+ * También incluye un resumen en vivo de la reserva.
  */
 
 require_once 'config.php';
 require_once 'funciones.php';
 
+// Solo usuarios logueados pueden hacer reservas
 verificar_autenticacion();
 
 $titulo_pagina = 'Nueva Reserva - ' . APP_NAME;
@@ -14,11 +19,16 @@ $titulo_pagina = 'Nueva Reserva - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Cargar datos necesarios para crear la reserva
+// ---------------------------------------------------------------
+// CARGA DE DATOS INICIALES
+// ---------------------------------------------------------------
 $servicios = obtener_servicios($mysqli);
 $barberos = obtener_barberos($mysqli);
 $config = obtener_config_sistema($mysqli);
 
+// ---------------------------------------------------------------
+// ESTILOS ADICIONALES (CSS embebido)
+// ---------------------------------------------------------------
 $estilos_adicionales = '<style>
     .form-select {
         color: #f3f3f3;
@@ -42,42 +52,47 @@ $estilos_adicionales = '<style>
     }
 </style>';
 
-// Procesar el formulario de nueva reserva
+// ---------------------------------------------------------------
+// PROCESAR EL FORMULARIO DE NUEVA RESERVA
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Recogemos y sanitizamos los datos del formulario
     $fecha = trim($_POST['fecha'] ?? '');
     $hora = trim($_POST['hora'] ?? '');
     $id_servicio = intval($_POST['id_servicio'] ?? 0);
     $dni_barbero = trim($_POST['dni_barbero'] ?? '');
     $notas = trim($_POST['notas'] ?? '');
     
-    // Validar los datos del formulario
+    // Validación de campos obligatorios
     if (empty($fecha) || empty($hora) || $id_servicio <= 0 || empty($dni_barbero)) {
         $error = 'Por favor, completa todos los campos requeridos.';
     } else {
-        // Obtener servicio
+        // Verificar que el servicio existe
         $servicio = obtener_servicio($id_servicio, $mysqli);
         if (!$servicio) {
             $error = 'Servicio no encontrado.';
         } else {
-            // Comprobar que la fecha sea hoy o posterior
+            // Verificar que la fecha no sea pasada
             if (strtotime($fecha) < strtotime(date('Y-m-d'))) {
                 $error = 'La fecha debe ser hoy o posterior.';
             } else {
-                // Obtener barbero
+                // Verificar que el barbero existe
                 $barbero = obtener_barbero($dni_barbero, $mysqli);
                 if (!$barbero) {
                     $error = 'Barbero no encontrado.';
                 } else {
+                    // Validar formato de hora
                     if (strtotime($hora) === false) {
                         $error = 'La hora seleccionada no es válida.';
                     } else {
+                        // Comprobar que la hora está disponible (no ocupada)
                         $slots_disponibles = obtener_slots_disponibles_barbero($dni_barbero, $fecha, $id_servicio, $mysqli);
                         if (!in_array($hora, $slots_disponibles, true)) {
                             $error = 'El horario seleccionado no está disponible. Por favor, elige otro.';
                         } else {
-                            // Crear reserva
+                            // TODO OK: Insertar la reserva en la base de datos
                             $fecha_prep = escapar($fecha, $mysqli);
                             $hora_prep = escapar($hora, $mysqli);
                             $dni_prep = escapar($dni_barbero, $mysqli);
@@ -87,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       VALUES ('$fecha_prep', '$hora_prep', '$dni_prep', $usuario_id, $id_servicio, " . $servicio['precio'] . ", 'pendiente', '$notas_prep')";
 
                             if ($mysqli->query($query)) {
-                                redirigir_con_mensaje('reservas.php', '✅ ¡Cita reservada con éxito! El barbero la confirmará pronto.', 'success');
+                                redirigir_con_mensaje('reservas.php', ' Cita reservada con éxito! El barbero la confirmará pronto.', 'success');
                             } else {
                                 $error = 'Error al crear la reserva: ' . $mysqli->error;
                             }
@@ -99,6 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ---------------------------------------------------------------
+// CAPTURAR CONTENIDO
+// ---------------------------------------------------------------
 ob_start();
 ?>
 
@@ -111,13 +129,16 @@ ob_start();
                 </h3>
             </div>
             <div class="card-body">
+                <!-- Mensaje de error si lo hay -->
                 <?php if (!empty($error)): ?>
                     <div class="alert alert-danger"><?php echo e($error); ?></div>
                 <?php endif; ?>
                 
+                <!-- Formulario de reserva -->
                 <form method="POST" id="formulario_reserva">
                     <?php echo csrf_input(); ?>
-                    <!-- ROW 1: Servicio -->
+                    
+                    <!-- Fila 1: Servicio y Barbero -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="id_servicio" class="form-label">
@@ -162,7 +183,7 @@ ob_start();
                         </div>
                     </div>
                     
-                    <!-- ROW 2: Fecha y Hora -->
+                    <!-- Fila 2: Fecha y Hora -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="fecha" class="form-label">
@@ -184,6 +205,7 @@ ob_start();
                             <label for="hora" class="form-label">
                                 <i class="bi bi-clock"></i> Hora *
                             </label>
+                            <!-- Select de horas: se habilita vía JS después de cargar slots -->
                             <select class="form-select" id="hora" name="hora" required disabled>
                                 <option value="">Selecciona hora...</option>
                             </select>
@@ -191,7 +213,7 @@ ob_start();
                         </div>
                     </div>
                     
-                    <!-- NOTAS -->
+                    <!-- Notas opcionales -->
                     <div class="mb-3">
                         <label for="notas" class="form-label">
                             <i class="bi bi-chat"></i> Notas (Opcional)
@@ -205,18 +227,18 @@ ob_start();
                         ></textarea>
                     </div>
                     
-                    <!-- RESUMEN -->
+                    <!-- Resumen de la reserva (se actualiza dinámicamente) -->
                     <div class="alert alert-info reserva-resumen" id="resumen">
-                        <strong>📋 Resumen de tu reserva:</strong>
+                        <strong>Resumen de tu reserva:</strong>
                         <div id="resumen_contenido"></div>
                     </div>
                     
-                    <!-- AVISO CANCELACIÓN -->
+                    <!-- Aviso de política de cancelación -->
                     <div class="alert alert-warning py-2 mb-3" role="alert">
                         <small><i class="bi bi-info-circle"></i> Las citas solo se pueden cancelar hasta <strong><?php echo (int)($config['aviso_cancelacion_horas'] ?? 24); ?>h</strong> antes de la hora reservada.</small>
                     </div>
 
-                    <!-- BOTONES -->
+                    <!-- Botones de acción -->
                     <div class="d-flex gap-2 justify-content-between">
                         <a href="index.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Volver
@@ -236,7 +258,11 @@ ob_start();
     </div>
 </div>
 
+<!-- ============================================================
+     JAVASCRIPT: Carga dinámica de horarios y resumen
+     ============================================================ -->
 <script>
+// Datos de configuración pasados desde PHP
 const config = {
     horario_apertura: '<?php echo e($config['horario_apertura']); ?>',
     horario_cierre: '<?php echo e($config['horario_cierre']); ?>',
@@ -244,10 +270,14 @@ const config = {
     tiempo_preparacion: <?php echo $config['tiempo_preparacion_minutos']; ?>
 };
 
+// Arrays completos de servicios y barberos para usar en JS
 const servicios = <?php echo json_encode($servicios, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 const barberos = <?php echo json_encode($barberos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
-// Actualizar duración al cambiar servicio
+/**
+ * actualizarDuracion()
+ * Se ejecuta al cambiar el servicio. Dispara la recarga de horarios.
+ */
 function actualizarDuracion() {
     const select = document.getElementById('id_servicio');
     const option = select.options[select.selectedIndex];
@@ -258,7 +288,11 @@ function actualizarDuracion() {
     }
 }
 
-// Actualizar horarios disponibles
+/**
+ * actualizarHorarios()
+ * Llama a la API de horarios disponibles y rellena el select de horas.
+ * También formatea las horas a formato 12h AM/PM para mostrar al usuario.
+ */
 async function actualizarHorarios() {
     const fecha = document.getElementById('fecha').value;
     const dni_barbero = document.getElementById('dni_barbero').value;
@@ -266,12 +300,14 @@ async function actualizarHorarios() {
     const horaSelect = document.getElementById('hora');
     const infoHoras = document.getElementById('horas_disponibles');
     
+    // Resetear el select de horas
     horaSelect.innerHTML = '<option value="">Selecciona hora...</option>';
     horaSelect.disabled = true;
     document.getElementById('btn_reservar').disabled = true;
     document.getElementById('resumen').style.display = 'none';
     infoHoras.textContent = '';
     
+    // Si falta algún campo, no hacemos la petición
     if (!fecha || !dni_barbero || !id_servicio) {
         infoHoras.textContent = 'Selecciona servicio, barbero y fecha para ver horas.';
         return;
@@ -306,6 +342,7 @@ async function actualizarHorarios() {
             return;
         }
 
+        // Función para convertir hora 24h a formato 12h AM/PM
         function formato12h(hora) {
             const [h, m] = hora.split(':');
             const ih = parseInt(h, 10);
@@ -314,6 +351,7 @@ async function actualizarHorarios() {
             return h12 + ':' + m + ' ' + ampm;
         }
 
+        // Rellenar el select con las horas disponibles
         data.slots.forEach((hora) => {
             const option = document.createElement('option');
             option.value = hora;
@@ -330,7 +368,10 @@ async function actualizarHorarios() {
     actualizarResumen();
 }
 
-// Actualizar resumen
+/**
+ * actualizarResumen()
+ * Muestra un resumen en vivo con los datos seleccionados.
+ */
 function actualizarResumen() {
     const idServicio = document.getElementById('id_servicio').value;
     const dniBarbero = document.getElementById('dni_barbero').value;
@@ -339,6 +380,7 @@ function actualizarResumen() {
     
     const btnReservar = document.getElementById('btn_reservar');
     
+    // Solo mostrar resumen si todos los campos están completos
     if (idServicio && dniBarbero && fecha && hora) {
         const servicio = servicios.find(s => s.ID_servicio == idServicio);
         const barbero = barberos.find(b => b.DNI_barbero == dniBarbero);
@@ -349,7 +391,7 @@ function actualizarResumen() {
                 <p><strong>Barbero:</strong> ${barbero.nombre} ${barbero.apellidos}</p>
                 <p><strong>Fecha:</strong> ${new Date(fecha).toLocaleDateString('es-ES', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</p>
                 <p><strong>Hora:</strong> ${hora}</p>
-                <p><strong>Duración:</strong> ${servicio.duracion_minutos} minutos</p>
+                <p><strong>Duracin:</strong> ${servicio.duracion_minutos} minutos</p>
             </div>
         `;
         
@@ -362,12 +404,13 @@ function actualizarResumen() {
     }
 }
 
-// Event listeners
+// Event listeners para actualizar dinámicamente
 document.getElementById('fecha').addEventListener('change', actualizarHorarios);
 document.getElementById('dni_barbero').addEventListener('change', actualizarHorarios);
 document.getElementById('hora').addEventListener('change', actualizarResumen);
 document.getElementById('id_servicio').addEventListener('change', actualizarResumen);
 
+// Mensaje inicial al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
     const infoHoras = document.getElementById('horas_disponibles');
     if (infoHoras) {

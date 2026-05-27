@@ -1,14 +1,22 @@
 <?php
-/**
+/*
  * plantilla.php
- * Plantilla base que usa todas las páginas del sitio.
+ * =============
+ * Plantilla base (layout) que usan todas las páginas del proyecto.
+ * Incluye: cabecera con nav, estilos globales, contenedor principal y footer.
+ * Cada página inyecta su contenido en $contenido y opcionalmente
+ * $estilos_adicionales y $scripts_adicionales.
  */
 
-// Evitar que el navegador guarde la página en caché
+// ---------------------------------------------------------------
+// CABECERAS HTTP ANTI-CACHÉ
+// ---------------------------------------------------------------
+// Evitamos que el navegador guarde en caché páginas dinámicas
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
 
+// Detectamos si es una página del panel admin (para ajustar rutas relativas)
 $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
 ?>
 <!DOCTYPE html>
@@ -632,11 +640,13 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
                                 </a>
                             </li>
                             
-                            <?php if ($es_admin): ?>
+                            <!-- Menú de administración (solo visible para admins) -->
+                    <?php if ($es_admin): ?>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
                                         <i class="bi bi-shield-lock"></i> Admin
                                     </a>
+                                    <!-- Submenú con las secciones del panel de control -->
                                     <ul class="dropdown-menu" aria-labelledby="adminMenu">
                                         <li><a class="dropdown-item" href="<?php echo APP_URL; ?>/admin/dashboard.php">Dashboard</a></li>
                                         <li><hr class="dropdown-divider"></li>

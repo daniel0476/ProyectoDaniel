@@ -1,12 +1,17 @@
 <?php
-/**
+/*
  * admin/usuarios.php
- * Administración de usuarios en el panel.
+ * ==================
+ * Panel de gestión de usuarios del sistema.
+ * Permite filtrar por rol/estado, buscar por nombre/email,
+ * cambiar el rol de un usuario (cliente/admin),
+ * desactivar usuarios (soft-delete) y ver detalles en modal.
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../funciones.php';
 
+// Solo administradores pueden acceder
 verificar_autenticacion();
 verificar_admin();
 
@@ -15,24 +20,31 @@ $titulo_pagina = 'Gestión de Usuarios - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Procesar las acciones de usuario enviadas desde el formulario
+// ---------------------------------------------------------------
+// FILTROS DE BÚSQUEDA
+// ---------------------------------------------------------------
 $filtro_rol = trim($_GET['rol'] ?? '');
 $filtro_estado = trim($_GET['estado'] ?? '');
 $filtro_busqueda = trim($_GET['busqueda'] ?? '');
 
+// ---------------------------------------------------------------
+// PROCESAR ACCIONES POST (eliminar y cambiar rol)
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
+    // Eliminación lógica (soft-delete): pone activo = 0
     if (isset($_POST['eliminar'])) {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0 && $id !== $usuario_id) {
             $query = "UPDATE usuarios SET activo = 0 WHERE ID_usuario = $id";
             if ($mysqli->query($query)) {
-                $exito = '✅ Usuario eliminado correctamente.';
+                $exito = ' Usuario eliminado correctamente.';
             }
         }
     }
 
+    // Cambio de rol (cliente <-> admin)
     if (isset($_POST['cambiar_rol'])) {
         $id = intval($_POST['id'] ?? 0);
         $rol = trim($_POST['rol'] ?? '');
@@ -40,13 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id > 0 && in_array($rol, ['cliente', 'admin'], true) && $id !== $usuario_id) {
             $query = "UPDATE usuarios SET rol = '$rol' WHERE ID_usuario = $id";
             if ($mysqli->query($query)) {
-                $exito = '✅ Rol actualizado correctamente.';
+                $exito = ' Rol actualizado correctamente.';
             }
         }
     }
 }
 
-// Preparar la consulta según los filtros aplicados
+// ---------------------------------------------------------------
+// CONSULTA CON FILTROS
+// ---------------------------------------------------------------
 $query = "SELECT * FROM usuarios WHERE 1=1";
 
 if (!empty($filtro_rol)) {
@@ -169,7 +183,7 @@ ob_start();
     <p class="text-muted">Total de usuarios registrados: <strong><?php echo count($usuarios); ?></strong></p>
 </div>
 
-<!-- FILTROS -->
+<!-- FILTROS: Rol, Estado y Búsqueda por texto -->
 <div class="card mb-3">
     <div class="card-body">
         <form method="GET" action="usuarios.php" class="row g-3 admin-filters">
@@ -208,6 +222,7 @@ ob_start();
     </div>
 </div>
 
+<!-- Mensajes de error/éxito -->
 <?php if (!empty($error)): ?>
     <div class="alert alert-danger"><?php echo $error; ?></div>
 <?php endif; ?>
@@ -244,7 +259,7 @@ ob_start();
                         <?php $usuario_citas = []; ?>
                         <?php foreach ($usuarios as $u): ?>
                             <?php 
-                            // Contar las citas asociadas al usuario
+                            // Contar cuántas citas tiene cada usuario
                             $query_citas = "SELECT COUNT(*) as total FROM citas WHERE ID_usuario = " . $u['ID_usuario'];
                             $citas_count = $mysqli->query($query_citas)->fetch_assoc()['total'];
                             $usuario_citas[$u['ID_usuario']] = $citas_count;
@@ -270,7 +285,8 @@ ob_start();
                                 <?php endif; ?>
                             </td>
                             <td class="admin-users-role">
-                                <form method="POST" action="usuarios.php" onsubmit="return confirm('¿Cambiar rol de este usuario?');">
+                                <!-- Select para cambiar el rol del usuario -->
+                                <form method="POST" action="usuarios.php" onsubmit="return confirm('Cambiar rol de este usuario?');">
                                     <?php echo csrf_input(); ?>
                                     <input type="hidden" name="cambiar_rol" value="1">
                                     <input type="hidden" name="id" value="<?php echo (int)$u['ID_usuario']; ?>">
@@ -281,10 +297,12 @@ ob_start();
                                 </form>
                             </td>
                             <td class="admin-users-actions">
+                                <!-- Botón para ver detalles del usuario -->
                                 <a href="#" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalDetalles_<?php echo $u['ID_usuario']; ?>">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <form method="POST" action="usuarios.php" class="d-inline" onsubmit="return confirm('¿Estás seguro?');">
+                                <!-- Botón para eliminar (desactivar) usuario -->
+                                <form method="POST" action="usuarios.php" class="d-inline" onsubmit="return confirm('Estás seguro?');">
                                     <?php echo csrf_input(); ?>
                                     <input type="hidden" name="eliminar" value="1">
                                     <input type="hidden" name="id" value="<?php echo (int)$u['ID_usuario']; ?>">
@@ -302,6 +320,7 @@ ob_start();
     </div>
 </div>
 
+<!-- MODALES DE DETALLE PARA CADA USUARIO -->
 <?php foreach ($usuarios as $u): ?>
     <?php $citas_count = $usuario_citas[$u['ID_usuario']] ?? 0; ?>
     <div class="modal fade" id="modalDetalles_<?php echo $u['ID_usuario']; ?>" tabindex="-1">

@@ -1,20 +1,31 @@
 <?php
-/**
+/*
  * reservas.php
- * Lista las reservas propias del cliente.
+ * ============
+ * Página donde el cliente puede ver todas sus citas (activas y pasadas),
+ * consultar detalles como barbero, servicio, fecha, hora, precio,
+ * y cancelar aquellas que aún estén dentro del plazo permitido.
  */
 
 require_once 'config.php';
 require_once 'funciones.php';
 
+// Solo usuarios logueados pueden ver sus reservas
 verificar_autenticacion();
 
 $titulo_pagina = 'Mis Reservas - ' . APP_NAME;
 
-// Obtener las citas del usuario
+// ---------------------------------------------------------------
+// CARGA DE DATOS
+// ---------------------------------------------------------------
+// Obtenemos todas las citas del usuario (excluye canceladas)
 $citas = obtener_citas_usuario($usuario_id, $mysqli);
+// Cuántas horas de antelación mínima se necesitan para cancelar
 $horas_cancelacion = obtener_horas_cancelacion($mysqli);
 
+// ---------------------------------------------------------------
+// ESTILOS ADICIONALES (CSS embebido)
+// ---------------------------------------------------------------
 $estilos_adicionales = '<style>
     .reservas-page-title,
     .reservas-page-title .bi,
@@ -85,31 +96,39 @@ $estilos_adicionales = '<style>
     }
 </style>';
 
-// Procesar la cancelación solicitada por el usuario
+// ---------------------------------------------------------------
+// PROCESAR CANCELACIÓN
+// ---------------------------------------------------------------
+// Si el usuario ha pulsado el botón "Cancelar" en alguna cita
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelar'], $_POST['id_cita'])) {
     requerir_csrf();
 
     $id_cita = intval($_POST['id_cita']);
     
-    // Asegurarse de que la cita pertenece al usuario
+    // Verificar que la cita pertenece al usuario actual (seguridad)
     $cita = obtener_cita($id_cita, $mysqli);
     if ($cita && $cita['ID_usuario'] == $usuario_id && $cita['estado'] !== 'cancelada') {
-        // Comprobar que hay el tiempo mínimo para cancelar
+        // Calcular cuánto tiempo falta para la cita
         $fecha_cita = strtotime($cita['fecha'] . ' ' . $cita['hora']);
         $tiempo_restante = $fecha_cita - time();
         $horas = $tiempo_restante / 3600;
         
+        // Solo permitir cancelar si quedan suficientes horas de antelación
         if ($horas >= $horas_cancelacion) {
             $query = "UPDATE citas SET estado = 'cancelada' WHERE ID_cita = $id_cita";
             if ($mysqli->query($query)) {
                 redirigir_con_mensaje('reservas.php', ' Cita cancelada correctamente.', 'success');
             }
         } else {
+            // Si no cumple el plazo, mostrar mensaje de advertencia
             redirigir_con_mensaje('reservas.php', ' No puedes cancelar una cita con menos de ' . $horas_cancelacion . ' horas de anticipación.', 'warning');
         }
     }
 }
 
+// ---------------------------------------------------------------
+// CAPTURAR CONTENIDO
+// ---------------------------------------------------------------
 ob_start();
 ?>
 
@@ -119,6 +138,7 @@ ob_start();
             <h1 class="mb-0 reservas-page-title">
                 <i class="bi bi-calendar-check"></i> Mis Citas
             </h1>
+            <!-- Botón para crear una nueva reserva -->
             <a href="nueva_reserva.php" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Nueva Reserva
             </a>
@@ -126,23 +146,26 @@ ob_start();
     </div>
 </div>
 
+<!-- Mensaje cuando no hay citas registradas -->
 <?php if (empty($citas)): ?>
     <div class="no-data">
         <i class="bi bi-calendar-x reservas-empty-icon"></i>
         <h4 class="mt-3 reservas-empty-title">No tienes citas aún</h4>
-        <p class="reservas-empty-subtitle">¿Por qué no reservas una ahora?</p>
+        <p class="reservas-empty-subtitle">Por qué no reservas una ahora?</p>
         <a href="nueva_reserva.php" class="btn btn-primary mt-3">
             <i class="bi bi-calendar-plus"></i> Reservar Cita
         </a>
     </div>
 <?php else: ?>
-    <!-- FICHAS DE CITAS -->
+    <!-- Listado de citas en tarjetas -->
     <div class="row">
         <?php foreach ($citas as $cita): ?>
+        <!-- Asignamos una clase CSS según el estado (define el color del borde izquierdo) -->
         <?php $clase_estado = match($cita['estado']) { 'pendiente' => 'reserva-card-pendiente', 'confirmada' => 'reserva-card-confirmada', 'cancelada' => 'reserva-card-cancelada', 'completada' => 'reserva-card-completada', default => 'reserva-card-default' }; ?>
         <div class="col-md-6 mb-3">
             <div class="card reserva-card <?php echo $clase_estado; ?>">
                 <div class="card-body">
+                    <!-- Cabecera: nombre del servicio + badge del estado -->
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="card-title mb-0">
                             <?php echo e($cita['servicio_nombre']); ?>
@@ -153,40 +176,42 @@ ob_start();
                         </span>
                     </div>
                     
+                    <!-- Detalles de la cita -->
                     <div class="card-text mt-3">
                         <div class="mb-2">
-                            <strong>👨‍💼 Barbero:</strong> 
+                            <strong>Barbero:</strong> 
                             <?php echo e($cita['barbero_nombre'] . ' ' . $cita['barbero_apellidos']); ?>
                         </div>
                         
                         <div class="mb-2">
-                            <strong>📅 Fecha:</strong> 
+                            <strong>Fecha:</strong> 
                             <?php echo formatear_fecha($cita['fecha']); ?>
                         </div>
                         
                         <div class="mb-2">
-                            <strong>🕐 Hora:</strong> 
+                            <strong>Hora:</strong> 
                             <?php echo formatear_hora($cita['hora']); ?>
                         </div>
                         
                         <div class="mb-2">
-                            <strong>⏱️ Duración:</strong> 
+                            <strong>Duracin:</strong> 
                             <?php echo $cita['duracion_minutos']; ?> minutos
                         </div>
                         
                         <div class="mb-2">
-                            <strong>💰 Precio:</strong> 
+                            <strong>Precio:</strong> 
                             €<?php echo number_format($cita['precio_final'], 2, ',', '.'); ?>
                         </div>
                         
+                        <!-- Notas que el cliente dejó al hacer la reserva -->
                         <?php if ($cita['notas_cliente']): ?>
                         <div class="mb-2 p-2 bg-light rounded reserva-nota">
-                            <strong>📝 Notas:</strong> <?php echo nl2br(e($cita['notas_cliente'])); ?>
+                            <strong>Notas:</strong> <?php echo nl2br(e($cita['notas_cliente'])); ?>
                         </div>
                         <?php endif; ?>
                     </div>
                     
-                    <!-- ACCIONES -->
+                    <!-- Botón de cancelar + info de tiempo restante -->
                     <div class="mt-3 d-flex gap-2">
                         <?php 
                         $fecha_cita = strtotime($cita['fecha'] . ' ' . $cita['hora']);
@@ -196,8 +221,9 @@ ob_start();
                         $puede_cancelar = $horas >= $horas_cancelacion && ($cita['estado'] === 'pendiente' || $cita['estado'] === 'confirmada');
                         ?>
                         
+                        <!-- Mostramos botón de cancelar solo si la cita está activa -->
                         <?php if ($cita['estado'] === 'pendiente' || $cita['estado'] === 'confirmada'): ?>
-                            <form method="POST" action="reservas.php" onsubmit="return <?php echo $puede_cancelar ? "confirm('¿Estás seguro de que quieres cancelar esta cita?')" : 'false'; ?>;">
+                            <form method="POST" action="reservas.php" onsubmit="return <?php echo $puede_cancelar ? "confirm('Estás seguro de que quieres cancelar esta cita?')" : 'false'; ?>;">
                                 <?php echo csrf_input(); ?>
                                 <input type="hidden" name="cancelar" value="1">
                                 <input type="hidden" name="id_cita" value="<?php echo (int)$cita['ID_cita']; ?>">
@@ -207,6 +233,7 @@ ob_start();
                             </form>
                         <?php endif; ?>
 
+                        <!-- Si no se puede cancelar, mostramos el motivo -->
                         <?php if (!$puede_cancelar && ($cita['estado'] === 'pendiente' || $cita['estado'] === 'confirmada')): ?>
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
@@ -214,6 +241,7 @@ ob_start();
                             </small>
                         <?php endif; ?>
                         
+                        <!-- Indicador de tiempo restante para citas próximas -->
                         <?php if ($es_proxima && ($cita['estado'] === 'pendiente' || $cita['estado'] === 'confirmada')): ?>
                             <span class="badge bg-success ms-auto">
                                 <i class="bi bi-hourglass-split"></i> 
@@ -227,7 +255,7 @@ ob_start();
         <?php endforeach; ?>
     </div>
 
-    <!-- ESTADÍSTICAS -->
+    <!-- Estadísticas resumen de todas las citas -->
     <div class="row mt-40">
         <div class="col-md-3 mb-3">
             <div class="card text-center">
