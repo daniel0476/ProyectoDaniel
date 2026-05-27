@@ -1,12 +1,12 @@
 <?php
 /**
  * login.php
- * Sistema de login de usuarios
+ * Acceso para clientes y administradores.
  */
 
 require_once 'config.php';
 
-// Si ya está logueado, redirigir al inicio
+// Si ya hay sesión, vamos al inicio
 if ($usuario_logueado) {
     header('Location: index.php');
     exit;
@@ -17,7 +17,7 @@ require_once 'funciones.php';
 $error = '';
 $exito = '';
 
-// Procesar formulario
+// Procesar el envío del formulario de login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -30,11 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!validar_email($email)) {
         $error = 'El email no es válido.';
     } else {
-        // Buscar usuario
+        // Buscar al usuario por email
         $usuario = obtener_usuario_por_email($email, $mysqli);
         
-        if ($usuario && verificar_contrasena($contrasena, $usuario['contrasena'])) {
-            // Login exitoso
+        $login_exitoso = false;
+
+        if ($usuario) {
+            if (verificar_contrasena($contrasena, $usuario['contrasena'])) {
+                $login_exitoso = true;
+            } elseif ($usuario['contrasena'] === $contrasena) {
+                // Soporte para contraseñas antiguas almacenadas en texto plano
+                $login_exitoso = true;
+                $nuevo_hash = hashear_contrasena($contrasena);
+                actualizar_contrasena_usuario($usuario['ID_usuario'], $nuevo_hash, $mysqli);
+            }
+        }
+
+        if ($login_exitoso) {
             session_regenerate_id(true);
             $_SESSION['usuario_id'] = $usuario['ID_usuario'];
             $_SESSION['usuario_nombre'] = $usuario['nombre'];
@@ -71,7 +83,7 @@ ob_start();
         <div class="login-header">
             <img src="<?php echo APP_URL; ?>/assets/img/logoBarberia.png" alt="Logo" class="login-logo">
             <h1><?php echo APP_NAME; ?></h1>
-            <p>Sistema de Reservas</p>
+            <p>Accede a tu cuenta</p>
         </div>
         
         <?php if ($sesion_expirada): ?>
@@ -117,9 +129,9 @@ ob_start();
         </form>
         
         <div class="demo-creds">
-            <strong>🧪 Credenciales de prueba:</strong>
-            <p><strong>Cliente:</strong> juan@email.com / 1234</p>
-            <p><strong>Admin:</strong> admin@email.com / 1234</p>
+            <strong> Credenciales de prueba:</strong>
+            <p><strong>Cliente:</strong> juan@email.com</p>
+            <p><strong>Admin:</strong> admin@email.com</p>
         </div>
         
         <div class="register-link">

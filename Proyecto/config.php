@@ -1,34 +1,31 @@
 <?php
 /**
  * config.php
- * Configuración de conexión a base de datos y variables globales
- * IMPORTANTE: Cambiar credenciales según tu entorno
+ * Carga la configuración general y conecta con la base de datos.
  */
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 
-// ============================================
-// CONFIGURACIÓN DE BASE DE DATOS
-// ============================================
-define('DB_HOST', 'localhost');      // Host del servidor MySQL
-define('DB_USER', 'root');           // Usuario MySQL (cambia si es diferente)
-define('DB_PASS', '');               // Contraseña MySQL
-define('DB_NAME', 'barberia');       // Nombre de la base de datos
+// Datos de la base de datos (valores integrados para la copia del proyecto)
+define('DB_HOST', 'sql101.infinityfree.com');
+define('DB_USER', 'if0_42014852');
+define('DB_PASS', 'AN4jfXvdh43gpmr');
+define('DB_NAME', 'if0_42014852_barberia');
 
-// ============================================
-// CONFIGURACIÓN DE LA APLICACIÓN
-// ============================================
+// Parámetros de la aplicación
 define('APP_NAME', 'Barbería Barbers');
-define('APP_URL', 'http://localhost/barberia');  // URL base del proyecto
-define('SESSION_TIMEOUT', 3600);                 // Timeout de sesión (1 hora)
 
-// ============================================
-// CONFIGURACIÓN DE SEGURIDAD
-// ============================================
-define('USE_HTTPS', false);  // Cambiar a true en producción
+define('USE_HTTPS', false);
+
+define('SESSION_TIMEOUT', 3600);                 // duración de sesión en segundos
+
 define('HASH_ALGORITHM', 'sha256');
 
-// ============================================
-// CONECTAR A LA BASE DE DATOS
-// ============================================
+// URL base de la aplicación
+define('APP_URL', 'https://cjbarberia.infinityfreeapp.com');
+
+// Conexión a la base de datos
 $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
 // Verificar conexión
@@ -39,14 +36,12 @@ if ($mysqli->connect_error) {
 // Establecer charset UTF-8
 $mysqli->set_charset("utf8mb4");
 
-// ============================================
-// INICIAR SESIÓN
-// ============================================
+// Iniciar la sesión si aún no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Verificar timeout de sesión
+// Controlar el tiempo de vida de la sesión
 if (isset($_SESSION['ultimo_acceso'])) {
     if (time() - $_SESSION['ultimo_acceso'] > SESSION_TIMEOUT) {
         $es_api = defined('IS_API_REQUEST') && IS_API_REQUEST === true;
@@ -69,9 +64,7 @@ if (isset($_SESSION['ultimo_acceso'])) {
 }
 $_SESSION['ultimo_acceso'] = time();
 
-// ============================================
-// VARIABLES GLOBALES
-// ============================================
+// Variables de sesión usadas en todo el proyecto
 $usuario_logueado = isset($_SESSION['usuario_id']);
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_rol = $_SESSION['usuario_rol'] ?? null;

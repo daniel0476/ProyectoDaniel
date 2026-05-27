@@ -1,7 +1,7 @@
 <?php
 /**
  * registro.php
- * Registro de nuevos usuarios
+ * Registro de nuevos clientes.
  */
 
 require_once 'config.php';
@@ -9,7 +9,7 @@ require_once 'funciones.php';
 
 $titulo_pagina = 'Registro - ' . APP_NAME;
 
-// Si ya está logueado, redirigir
+// Si ya hay sesión, no hace falta volver a registrarse
 if ($usuario_logueado) {
     header('Location: index.php');
     exit;
@@ -18,7 +18,7 @@ if ($usuario_logueado) {
 $error = '';
 $exito = '';
 
-// Procesar registro
+// Procesar el envío del formulario de registro
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($contrasena !== $contrasena_confirmar) {
         $error = 'Las contraseñas no coinciden.';
     } else {
-        // Verificar que el email no existe
+        // Comprobar si el email ya está registrado
         $email_prep = escapar($email, $mysqli);
         $query_check = "SELECT ID_usuario FROM usuarios WHERE email = '$email_prep'";
         $resultado = $mysqli->query($query_check);
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 registrar_acceso($usuario_nuevo['ID_usuario'], $mysqli);
                 
-                redirigir_con_mensaje('index.php', '✅ ¡Bienvenido! Tu cuenta ha sido creada exitosamente.', 'success');
+                redirigir_con_mensaje('index.php', ' ¡Bienvenido! Tu cuenta ha sido creada exitosamente.', 'success');
             } else {
                 $error = 'Error al registrar: ' . $mysqli->error;
             }
@@ -85,12 +85,13 @@ ob_start();
             <div class="login-header">
                 <img src="<?php echo APP_URL; ?>/assets/img/logoBarberia.png" alt="Logo" class="login-logo">
                 <h1><?php echo APP_NAME; ?></h1>
-                <p>Crear cuenta de cliente</p>
+                    <p>Regístrate como cliente</p>
+                    <?php if (!empty($error)): ?>
+                        <div class="alert alert-danger">
+                            <?php echo $error; ?>
+                        </div>
+                    <?php endif; ?>
             </div>
-
-            <?php if (!empty($error)): ?>
-                <div class="alert alert-danger"><?php echo $error; ?></div>
-            <?php endif; ?>
 
             <form method="POST" action="registro.php" id="registroForm" novalidate>
                 <?php echo csrf_input(); ?>

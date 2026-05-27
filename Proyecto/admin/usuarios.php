@@ -1,11 +1,11 @@
 <?php
 /**
  * admin/usuarios.php
- * CRUD completo de usuarios
+ * Administración de usuarios en el panel.
  */
 
-require_once '../config.php';
-require_once '../funciones.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../funciones.php';
 
 verificar_autenticacion();
 verificar_admin();
@@ -15,7 +15,7 @@ $titulo_pagina = 'Gestión de Usuarios - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Procesar acciones
+// Procesar las acciones de usuario enviadas desde el formulario
 $filtro_rol = trim($_GET['rol'] ?? '');
 $filtro_estado = trim($_GET['estado'] ?? '');
 $filtro_busqueda = trim($_GET['busqueda'] ?? '');
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Construir query con filtros
+// Preparar la consulta según los filtros aplicados
 $query = "SELECT * FROM usuarios WHERE 1=1";
 
 if (!empty($filtro_rol)) {
@@ -241,11 +241,13 @@ ob_start();
                         </tr>
                     </thead>
                     <tbody>
+                        <?php $usuario_citas = []; ?>
                         <?php foreach ($usuarios as $u): ?>
                             <?php 
-                            // Obtener cantidad de citas
+                            // Contar las citas asociadas al usuario
                             $query_citas = "SELECT COUNT(*) as total FROM citas WHERE ID_usuario = " . $u['ID_usuario'];
                             $citas_count = $mysqli->query($query_citas)->fetch_assoc()['total'];
+                            $usuario_citas[$u['ID_usuario']] = $citas_count;
                             ?>
                         <tr>
                             <td><small class="text-muted">#<?php echo $u['ID_usuario']; ?></small></td>
@@ -292,34 +294,38 @@ ob_start();
                                 </form>
                             </td>
                         </tr>
-                        
-                        <!-- MODAL DETALLES -->
-                        <div class="modal fade" id="modalDetalles_<?php echo $u['ID_usuario']; ?>" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Detalles del Usuario</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p><strong>ID:</strong> <?php echo $u['ID_usuario']; ?></p>
-                                        <p><strong>Nombre:</strong> <?php echo e($u['nombre'] . ' ' . $u['apellidos']); ?></p>
-                                        <p><strong>Email:</strong> <?php echo e($u['email']); ?></p>
-                                        <p><strong>Teléfono:</strong> <?php echo e($u['telefono'] ?? '-'); ?></p>
-                                        <p><strong>Total de Citas:</strong> <?php echo $citas_count; ?></p>
-                                        <p><strong>Registered:</strong> <?php echo e(formatear_fecha($u['fecha_registro'])); ?></p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         <?php endif; ?>
+    </div>
+</div>
+
+<?php foreach ($usuarios as $u): ?>
+    <?php $citas_count = $usuario_citas[$u['ID_usuario']] ?? 0; ?>
+    <div class="modal fade" id="modalDetalles_<?php echo $u['ID_usuario']; ?>" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Información del usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ID:</strong> <?php echo $u['ID_usuario']; ?></p>
+                    <p><strong>Nombre:</strong> <?php echo e($u['nombre'] . ' ' . $u['apellidos']); ?></p>
+                    <p><strong>Email:</strong> <?php echo e($u['email']); ?></p>
+                    <p><strong>Teléfono:</strong> <?php echo e($u['telefono'] ?? '-'); ?></p>
+                    <p><strong>Total de Citas:</strong> <?php echo $citas_count; ?></p>
+                    <p><strong>Registered:</strong> <?php echo e(formatear_fecha($u['fecha_registro'])); ?></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
     </div>
 </div>
 
@@ -331,5 +337,5 @@ ob_start();
 
 <?php
 $contenido = ob_get_clean();
-include '../plantilla.php';
+include __DIR__ . '/../plantilla.php';
 ?>

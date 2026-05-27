@@ -1,18 +1,18 @@
 <?php
 /**
  * admin/dashboard.php
- * Panel principal del administrador
+ * Pantalla principal del panel de administración.
  */
 
-require_once '../config.php';
-require_once '../funciones.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../funciones.php';
 
 verificar_autenticacion();
 verificar_admin();
 
 $titulo_pagina = 'Dashboard Admin - ' . APP_NAME;
 
-// Obtener estadísticas
+// Datos generales para el panel
 $config = obtener_config_sistema($mysqli);
 
 // TOTAL USUARIOS
@@ -44,20 +44,25 @@ $query_pendientes = "SELECT COUNT(*) as total FROM citas WHERE estado = 'pendien
 $citas_pendientes = $mysqli->query($query_pendientes)->fetch_assoc()['total'];
 
 // PRÓXIMAS CITAS
-$query_proximas = "SELECT citas.*, 
-                   usuarios.nombre AS cliente_nombre,
-                   barberos.nombre AS barbero_nombre,
-                   barberos.apellidos AS barbero_apellidos,
-                   servicios.nombre AS servicio_nombre
-                   FROM citas 
-                   LEFT JOIN usuarios ON citas.ID_usuario = usuarios.ID_usuario
-                   LEFT JOIN barberos ON citas.DNI_barbero = barberos.DNI_barbero
-                   LEFT JOIN servicios ON citas.ID_servicio = servicios.ID_servicio
-                   WHERE citas.fecha >= '" . date('Y-m-d') . "' 
-                   AND citas.estado != 'cancelada'
-                   ORDER BY citas.fecha, citas.hora
+$query_proximas = "SELECT * FROM citas 
+                   WHERE fecha >= '" . date('Y-m-d') . "' 
+                   AND estado != 'cancelada'
+                   ORDER BY fecha, hora
                    LIMIT 5";
 $proximas_citas = $mysqli->query($query_proximas)->fetch_all(MYSQLI_ASSOC);
+
+// Enriquecer cada cita con datos del usuario, barbero y servicio
+foreach ($proximas_citas as &$cita) {
+    $usuario = obtener_usuario($cita['ID_usuario'], $mysqli);
+    $cita['cliente_nombre'] = $usuario['nombre'] ?? 'N/A';
+    
+    $barbero = obtener_barbero($cita['DNI_barbero'], $mysqli);
+    $cita['barbero_nombre'] = $barbero['nombre'] ?? 'N/A';
+    $cita['barbero_apellidos'] = $barbero['apellidos'] ?? '';
+    
+    $servicio = obtener_servicio($cita['ID_servicio'], $mysqli);
+    $cita['servicio_nombre'] = $servicio['nombre'] ?? 'N/A';
+}
 
 $estilos_adicionales = '<style>
     .admin-metric-icon {
@@ -118,13 +123,20 @@ $estilos_adicionales = '<style>
     .card-header h5 i {
         color: #ffffff !important;
     }
+
+    .table td,
+    .table th,
+    .table small,
+    .table .text-muted {
+        color: #171717 !important;
+    }
 </style>';
 
 ob_start();
 ?>
 
 <h1 class="mb-30">
-    <i class="bi bi-speedometer2"></i> Panel de Control
+    <i class="bi bi-speedometer2"></i> Panel administrativo
 </h1>
 
 <!-- ESTADÍSTICAS PRINCIPALES -->
@@ -341,5 +353,5 @@ ob_start();
 
 <?php
 $contenido = ob_get_clean();
-include '../plantilla.php';
+include __DIR__ . '/../plantilla.php';
 ?>

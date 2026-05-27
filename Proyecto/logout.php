@@ -1,7 +1,7 @@
 <?php
 /**
  * logout.php
- * Cerrar sesión
+ * Cierra la sesión activa y limpia todo lo asociado.
  */
 
 require_once 'config.php';

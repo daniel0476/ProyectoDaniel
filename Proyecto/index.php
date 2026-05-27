@@ -1,7 +1,7 @@
 <?php
 /**
  * index.php
- * Página principal del sitio
+ * Página principal con servicios, barberos y reservas.
  */
 
 require_once 'config.php';
@@ -9,7 +9,7 @@ require_once 'funciones.php';
 
 $titulo_pagina = 'Inicio - ' . APP_NAME;
 
-// Obtener información
+// Obtener los datos que se muestran en la portada
 $config = obtener_config_sistema($mysqli);
 $servicios = obtener_servicios($mysqli);
 $barberos = obtener_barberos($mysqli);
@@ -31,6 +31,7 @@ $citas_proximas = [];
 $proximas_citas = 0;
 
 if ($usuario_logueado) {
+    // Cargar las citas próximas del usuario
     $citas_proximas = obtener_citas_usuario($usuario_id, $mysqli);
     $proximas_citas = count(array_filter($citas_proximas, fn($c) => ($c['estado'] === 'pendiente' || $c['estado'] === 'confirmada') && $c['fecha'] >= date('Y-m-d')));
 }
@@ -356,48 +357,29 @@ ob_start();
 </h2>
 
 <div class="row mb-40 home-services-row">
-    <?php
-    $fotos_servicios_pool = array_values(array_unique($fotos_servicios));
-    $fotos_servicios_usadas = [];
-    $ultima_foto_servicio = '';
-    ?>
     <?php foreach ($servicios as $servicio): ?>
     <div class="col-md-4 mb-3">
         <div class="card h-100">
             <?php
-            $nombre_servicio = strtolower($servicio['nombre']);
-            $foto_servicio = $fotos_servicios['default'];
-
-            if ((strpos($nombre_servicio, 'corte') !== false || strpos($nombre_servicio, 'cabello') !== false) && strpos($nombre_servicio, 'barba') !== false) {
-                $foto_servicio = $fotos_servicios['corte_barba'];
-            } elseif (strpos($nombre_servicio, 'lavado') !== false) {
-                $foto_servicio = $fotos_servicios['lavado'];
-            } elseif (strpos($nombre_servicio, 'tinte') !== false || strpos($nombre_servicio, 'color') !== false) {
-                $foto_servicio = $fotos_servicios['tinte'];
-            } elseif (strpos($nombre_servicio, 'barba') !== false) {
-                $foto_servicio = $fotos_servicios['barba'];
-            } elseif (strpos($nombre_servicio, 'corte') !== false || strpos($nombre_servicio, 'cabello') !== false) {
-                $foto_servicio = $fotos_servicios['corte'];
-            }
-
-            if (in_array($foto_servicio, $fotos_servicios_usadas, true)) {
-                $fotos_no_usadas = array_values(array_diff($fotos_servicios_pool, $fotos_servicios_usadas));
-                if (empty($fotos_no_usadas)) {
-                    $fotos_servicios_usadas = [];
-                    $fotos_no_usadas = $fotos_servicios_pool;
-
-                    if (count($fotos_no_usadas) > 1 && $fotos_no_usadas[0] === $ultima_foto_servicio) {
-                        $primera_foto = array_shift($fotos_no_usadas);
-                        $fotos_no_usadas[] = $primera_foto;
-                    }
+            $foto_servicio = $servicio['foto'] ?? '';
+            if (empty($foto_servicio)) {
+                $nombre_servicio = strtolower($servicio['nombre']);
+                if ((strpos($nombre_servicio, 'corte') !== false || strpos($nombre_servicio, 'cabello') !== false) && strpos($nombre_servicio, 'barba') !== false) {
+                    $foto_servicio = $fotos_servicios['corte_barba'];
+                } elseif (strpos($nombre_servicio, 'lavado') !== false) {
+                    $foto_servicio = $fotos_servicios['lavado'];
+                } elseif (strpos($nombre_servicio, 'tinte') !== false || strpos($nombre_servicio, 'color') !== false) {
+                    $foto_servicio = $fotos_servicios['tinte'];
+                } elseif (strpos($nombre_servicio, 'barba') !== false) {
+                    $foto_servicio = $fotos_servicios['barba'];
+                } elseif (strpos($nombre_servicio, 'corte') !== false || strpos($nombre_servicio, 'cabello') !== false) {
+                    $foto_servicio = $fotos_servicios['corte'];
+                } else {
+                    $foto_servicio = $fotos_servicios['default'];
                 }
-                $foto_servicio = $fotos_no_usadas[0];
             }
-
-            $fotos_servicios_usadas[] = $foto_servicio;
-            $ultima_foto_servicio = $foto_servicio;
             ?>
-            <img class="home-service-photo" src="assets/img/servicios/<?php echo e($foto_servicio); ?>" alt="Servicio de <?php echo e($servicio['nombre']); ?>">
+            <img class="home-service-photo" src="<?php echo APP_URL; ?>/assets/img/servir_imagen.php?tipo=servicio&archivo=<?php echo urlencode($foto_servicio); ?>" alt="Servicio de <?php echo e($servicio['nombre']); ?>">
             <div class="card-body">
                 <h5 class="card-title home-service-title">
                     <?php echo e($servicio['nombre']); ?>
@@ -428,7 +410,7 @@ ob_start();
         <div class="card">
             <div class="card-body">
                 <div class="home-team-head">
-                    <?php $foto_barbero = $fotos_barberos[strtolower($barbero['nombre'])] ?? $fotos_barberos['default']; ?>
+                    <?php $foto_barbero = !empty($barbero['foto']) ? $barbero['foto'] : ($fotos_barberos[strtolower($barbero['nombre'])] ?? $fotos_barberos['default']); ?>
                     <div>
                         <h5 class="card-title">
                             <i class="bi bi-person-fill home-team-name-icon"></i>
@@ -449,7 +431,7 @@ ob_start();
                             <i class="bi bi-calendar"></i> <?php echo e($barbero['dias_atiende']); ?>
                         </p>
                     </div>
-                    <img class="home-barber-photo" src="<?php echo APP_URL; ?>/assets/img/equipo/<?php echo e($foto_barbero); ?>" alt="Foto de <?php echo e($barbero['nombre']); ?>">
+                    <img class="home-barber-photo" src="<?php echo APP_URL; ?>/assets/img/servir_imagen.php?tipo=barbero&archivo=<?php echo urlencode($foto_barbero); ?>" alt="Foto de <?php echo e($barbero['nombre']); ?>">
                 </div>
             </div>
         </div>

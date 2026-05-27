@@ -7,10 +7,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@OLD_COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+
 
 -- =====================================================
 -- Base de datos: `barberia`
@@ -34,11 +31,11 @@ CREATE TABLE `usuarios` (
 
 -- Insertar datos de ejemplo
 INSERT INTO `usuarios` (`ID_usuario`, `nombre`, `apellidos`, `telefono`, `email`, `contrasena`, `rol`, `fecha_registro`, `activo`) VALUES
-(1, 'Juan', 'Perez', '611111111', 'juan@email.com', '$2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO', 'cliente', NOW(), 1),
-(2, 'Ana', 'Martinez', '612222222', 'ana@email.com', '$2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO', 'cliente', NOW(), 1),
-(3, 'Luis', 'Rodriguez', '613333333', 'luis@email.com', '$2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO', 'cliente', NOW(), 1),
-(4, 'Marta', 'Sanchez', '614444444', 'marta@email.com', '$2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO', 'cliente', NOW(), 1),
-(5, 'Laura', 'Garcia', '615555555', 'admin@email.com', '$2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO', 'admin', NOW(), 1);
+(1, 'Juan', 'Perez', '611111111', 'juan@email.com', '123456', 'cliente', NOW(), 1),
+(2, 'Ana', 'Martinez', '612222222', 'ana@email.com', '123456', 'cliente', NOW(), 1),
+(3, 'Luis', 'Rodriguez', '613333333', 'luis@email.com', '123456', 'cliente', NOW(), 1),
+(4, 'Marta', 'Sanchez', '614444444', 'marta@email.com', '123456', 'cliente', NOW(), 1),
+(5, 'Laura', 'Garcia', '615555555', 'admin@email.com', '1234', 'admin', NOW(), 1);
 
 -- =====================================================
 -- TABLA: barberos
@@ -50,6 +47,7 @@ CREATE TABLE `barberos` (
   `apellidos` varchar(80) NOT NULL,
   `telefono` varchar(15) DEFAULT NULL,
   `especialidad` varchar(100) DEFAULT 'Cortes generales',
+  `foto` varchar(255) DEFAULT NULL,
   `experiencia_anos` int(2) DEFAULT 1,
   `horario_inicio` time DEFAULT '09:00:00',
   `horario_fin` time DEFAULT '18:00:00',
@@ -71,6 +69,7 @@ CREATE TABLE `servicios` (
   `ID_servicio` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `descripcion` text DEFAULT NULL,
+  `foto` varchar(255) DEFAULT NULL,
   `precio` decimal(6,2) NOT NULL,
   `duracion_minutos` int(3) DEFAULT 30,
   `activo` tinyint(1) DEFAULT 1,
@@ -117,13 +116,14 @@ INSERT INTO `citas` (`ID_cita`, `fecha`, `hora`, `DNI_barbero`, `ID_usuario`, `I
 -- Descripción: Define bloques de tiempo disponibles por barbero y día
 -- =====================================================
 CREATE TABLE `horarios_disponibles` (
-  `ID_horario` int(11) NOT NULL,
+  `ID_horario` int(11) NOT NULL AUTO_INCREMENT,
   `DNI_barbero` varchar(15) NOT NULL,
   `fecha` date NOT NULL,
   `inicio_hora` time NOT NULL,
   `fin_hora` time NOT NULL,
   `disponible` tinyint(1) DEFAULT 1,
-  `tipo` enum('normal','descanso','festivo') DEFAULT 'normal'
+  `tipo` enum('normal','descanso','festivo') DEFAULT 'normal',
+  PRIMARY KEY (`ID_horario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Insertar datos de ejemplo - Horarios disponibles próximos 30 días
@@ -184,7 +184,6 @@ ALTER TABLE `citas` ADD KEY `DNI_barbero` (`DNI_barbero`);
 ALTER TABLE `citas` ADD KEY `ID_usuario` (`ID_usuario`);
 ALTER TABLE `citas` ADD KEY `ID_servicio` (`ID_servicio`);
 
-ALTER TABLE `horarios_disponibles` ADD PRIMARY KEY (`ID_horario`);
 ALTER TABLE `horarios_disponibles` ADD KEY `DNI_barbero` (`DNI_barbero`);
 
 ALTER TABLE `configuracion_sistema` ADD PRIMARY KEY (`ID_config`);
@@ -218,6 +217,11 @@ ALTER TABLE `historial_acceso`
 
 COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- =====================================================
+-- MIGRACIÓN PARA BASES DE DATOS EXISTENTES
+-- Ejecutar solo si ya tenías la BD antes de estos cambios
+-- =====================================================
+-- ALTER TABLE barberos ADD COLUMN foto VARCHAR(255) DEFAULT NULL AFTER especialidad;
+-- ALTER TABLE servicios ADD COLUMN foto VARCHAR(255) DEFAULT NULL AFTER descripcion;
+
+

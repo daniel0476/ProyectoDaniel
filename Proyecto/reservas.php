@@ -1,7 +1,7 @@
 <?php
 /**
  * reservas.php
- * Ver mis reservas
+ * Lista las reservas propias del cliente.
  */
 
 require_once 'config.php';
@@ -11,7 +11,7 @@ verificar_autenticacion();
 
 $titulo_pagina = 'Mis Reservas - ' . APP_NAME;
 
-// Obtener citas del usuario
+// Obtener las citas del usuario
 $citas = obtener_citas_usuario($usuario_id, $mysqli);
 $horas_cancelacion = obtener_horas_cancelacion($mysqli);
 
@@ -85,16 +85,16 @@ $estilos_adicionales = '<style>
     }
 </style>';
 
-// Procesar cancelación
+// Procesar la cancelación solicitada por el usuario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelar'], $_POST['id_cita'])) {
     requerir_csrf();
 
     $id_cita = intval($_POST['id_cita']);
     
-    // Verificar que la cita es del usuario
+    // Asegurarse de que la cita pertenece al usuario
     $cita = obtener_cita($id_cita, $mysqli);
     if ($cita && $cita['ID_usuario'] == $usuario_id && $cita['estado'] !== 'cancelada') {
-        // Verificar que falten al menos 24 horas
+        // Comprobar que hay el tiempo mínimo para cancelar
         $fecha_cita = strtotime($cita['fecha'] . ' ' . $cita['hora']);
         $tiempo_restante = $fecha_cita - time();
         $horas = $tiempo_restante / 3600;
@@ -102,10 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelar'], $_POST['i
         if ($horas >= $horas_cancelacion) {
             $query = "UPDATE citas SET estado = 'cancelada' WHERE ID_cita = $id_cita";
             if ($mysqli->query($query)) {
-                redirigir_con_mensaje('reservas.php', '✅ Cita cancelada correctamente.', 'success');
+                redirigir_con_mensaje('reservas.php', ' Cita cancelada correctamente.', 'success');
             }
         } else {
-            redirigir_con_mensaje('reservas.php', '❌ No puedes cancelar una cita con menos de ' . $horas_cancelacion . ' horas de anticipación.', 'warning');
+            redirigir_con_mensaje('reservas.php', ' No puedes cancelar una cita con menos de ' . $horas_cancelacion . ' horas de anticipación.', 'warning');
         }
     }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * mi_perfil.php
- * Editar perfil del usuario
+ * Página para editar los datos del usuario.
  */
 
 require_once 'config.php';
@@ -15,7 +15,7 @@ $usuario = obtener_usuario($usuario_id, $mysqli);
 $error = '';
 $exito = '';
 
-// Procesar actualización
+// Procesar cambios del perfil
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contrasena_nueva = trim($_POST['contrasena_nueva'] ?? '');
     $contrasena_confirmar = trim($_POST['contrasena_confirmar'] ?? '');
     
-    // Validar datos
+    // Validar la información enviada por el usuario
     if (empty($nombre) || empty($apellidos)) {
         $error = 'El nombre y apellidos son obligatorios.';
     } elseif (!empty($contrasena_nueva) && empty($contrasena_actual)) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!empty($contrasena_nueva) && $contrasena_nueva !== $contrasena_confirmar) {
         $error = 'Las contraseñas nuevas no coinciden.';
     } else {
-        // Actualizar perfil
+        // Actualizar los datos del perfil
         $nombre_prep = escapar($nombre, $mysqli);
         $apellidos_prep = escapar($apellidos, $mysqli);
         $telefono_prep = escapar($telefono, $mysqli);

@@ -1,11 +1,11 @@
 <?php
 /**
  * admin/servicios.php
- * CRUD de servicios
+ * Controla servicios activos desde el panel.
  */
 
-require_once '../config.php';
-require_once '../funciones.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../funciones.php';
 
 verificar_autenticacion();
 verificar_admin();
@@ -15,7 +15,7 @@ $titulo_pagina = 'Gestión de Servicios - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Procesar formulario
+// Guardar cambios o eliminar un servicio
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -32,18 +32,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $precio = floatval($_POST['precio'] ?? 0);
         $duracion = intval($_POST['duracion_minutos'] ?? 30);
 
+        // Procesar foto
+        $foto_nombre = null;
+        if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $foto_nombre = 'servicio_' . uniqid() . '.' . $ext;
+                $ruta_destino = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/servicios/' . $foto_nombre;
+                if (!move_uploaded_file($_FILES['foto']['tmp_name'], $ruta_destino)) {
+                    if (!copy($_FILES['foto']['tmp_name'], $ruta_destino)) {
+                        $foto_nombre = null;
+                    }
+                }
+            } else {
+                $error = 'Formato de foto no válido. Usa JPG, PNG o WEBP.';
+            }
+        }
+
         if (empty($nombre) || $precio <= 0) {
             $error = 'Nombre y precio son obligatorios.';
-        } else {
+        } elseif (empty($error)) {
             $nombre_prep = escapar($nombre, $mysqli);
             $descripcion_prep = escapar($descripcion, $mysqli);
 
             if ($id > 0) {
-                $query = "UPDATE servicios SET nombre = '$nombre_prep', descripcion = '$descripcion_prep', precio = $precio, duracion_minutos = $duracion WHERE ID_servicio = $id";
-                $exito = '✅ Servicio actualizado.';
+                if ($foto_nombre) {
+                    $query = "UPDATE servicios SET nombre = '$nombre_prep', descripcion = '$descripcion_prep', precio = $precio, duracion_minutos = $duracion, foto = '$foto_nombre' WHERE ID_servicio = $id";
+                } else {
+                    $query = "UPDATE servicios SET nombre = '$nombre_prep', descripcion = '$descripcion_prep', precio = $precio, duracion_minutos = $duracion WHERE ID_servicio = $id";
+                }
+                $exito = ' Servicio actualizado.';
             } else {
-                $query = "INSERT INTO servicios (nombre, descripcion, precio, duracion_minutos) VALUES ('$nombre_prep', '$descripcion_prep', $precio, $duracion)";
-                $exito = '✅ Servicio creado.';
+                $foto_val = $foto_nombre ? "'$foto_nombre'" : "NULL";
+                $query = "INSERT INTO servicios (nombre, descripcion, precio, duracion_minutos, foto) VALUES ('$nombre_prep', '$descripcion_prep', $precio, $duracion, $foto_val)";
+                $exito = ' Servicio creado.';
             }
 
             if ($mysqli->query($query)) {
@@ -55,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Obtener servicios
+// Leer los servicios activos para la vista
 $servicios = $mysqli->query("SELECT * FROM servicios WHERE activo = 1 ORDER BY nombre")->fetch_all(MYSQLI_ASSOC);
 
 $estilos_adicionales = '<style>
@@ -121,6 +143,7 @@ ob_start();
             <table class="table admin-servicios-table">
                 <thead>
                     <tr>
+                        <th>Foto</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
                         <th>Precio</th>
@@ -131,6 +154,15 @@ ob_start();
                 <tbody>
                     <?php foreach ($servicios as $svc): ?>
                     <tr>
+                        <td>
+                            <?php if (!empty($svc['foto'])): ?>
+                                <img src="../assets/img/servir_imagen.php?tipo=servicio&archivo=<?php echo urlencode($svc['foto']); ?>" alt="Foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
+                            <?php else: ?>
+                                <div class="bg-secondary d-inline-flex align-items-center justify-content-center text-white" style="width:48px;height:48px;border-radius:8px;font-size:18px;">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            <?php endif; ?>
+                        </td>
                         <td><strong><?php echo e($svc['nombre']); ?></strong></td>
                         <td class="admin-servicios-desc"><?php echo e(substr($svc['descripcion'] ?? '-', 0, 50)); ?></td>
                         <td>€<?php echo number_format($svc['precio'], 2); ?></td>
@@ -164,7 +196,7 @@ ob_start();
                 <h5 class="modal-title">Nuevo Servicio</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <?php echo csrf_input(); ?>
                 <input type="hidden" id="id" name="id" value="0">
                 <div class="modal-body">
@@ -175,6 +207,10 @@ ob_start();
                     <div class="mb-3">
                         <label for="descripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcion" name="descripcion" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="foto" class="form-label">Foto</label>
+                        <input type="file" class="form-control" id="foto" name="foto" accept="image/jpeg,image/png,image/webp">
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -215,5 +251,5 @@ function cargarServicio(datos) {
 
 <?php
 $contenido = ob_get_clean();
-include '../plantilla.php';
+include __DIR__ . '/../plantilla.php';
 ?>

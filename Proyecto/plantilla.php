@@ -1,10 +1,10 @@
 <?php
 /**
  * plantilla.php
- * Plantilla base del sitio con header y footer
+ * Plantilla base que usa todas las páginas del sitio.
  */
 
-// Headers para evitar caché
+// Evitar que el navegador guarde la página en caché
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
@@ -17,6 +17,7 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $titulo_pagina ?? APP_NAME; ?></title>
+    <link rel="icon" type="image/png" href="<?php echo APP_URL; ?>/assets/img/logoBarberia.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
@@ -71,7 +72,7 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             left: 0;
             right: 0;
             bottom: 0;
-            background: <?php echo $es_admin_page ? 'rgba(255, 255, 255, 1)' : 'transparent'; ?>;
+            background: transparent;
             z-index: -1;
             pointer-events: none;
             opacity: 1;
@@ -90,11 +91,9 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
             opacity: 0;
         }
 
-        <?php if (!$es_admin_page): ?>
         body {
             background: url("<?php echo APP_URL; ?>/assets/img/barberia_vigo_blanco.png") center center / cover no-repeat;
         }
-        <?php endif; ?>
 
         @keyframes fadeInBody {
             from { opacity: 0; }
@@ -603,7 +602,7 @@ $es_admin_page = strpos($_SERVER['REQUEST_URI'], '/admin/') !== false;
 </head>
 <body>
     <!-- HEADER -->
-    <header>
+    <header class="sticky-top">
         <nav class="navbar navbar-expand-lg <?php echo $usuario_logueado ? 'header-auth' : 'header-guest'; ?>">
             <div class="container">
                 <a class="navbar-brand" href="<?php echo APP_URL; ?>/index.php">

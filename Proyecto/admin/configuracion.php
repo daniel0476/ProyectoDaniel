@@ -1,11 +1,11 @@
 <?php
 /**
  * admin/configuracion.php
- * Configuración del sistema
+ * Ajustes generales de la barbería.
  */
 
-require_once '../config.php';
-require_once '../funciones.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../funciones.php';
 
 verificar_autenticacion();
 verificar_admin();
@@ -17,7 +17,7 @@ $exito = '';
 
 $config = obtener_config_sistema($mysqli);
 
-// Procesar formulario
+// Actualizar la configuración cuando envían el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              WHERE ID_config = 1";
     
     if ($mysqli->query($query)) {
-        $exito = '✅ Configuración actualizada correctamente.';
+        $exito = ' Configuración actualizada correctamente.';
         $config = obtener_config_sistema($mysqli);
     } else {
         $error = 'Error: ' . $mysqli->error;
@@ -228,5 +228,5 @@ ob_start();
 
 <?php
 $contenido = ob_get_clean();
-include '../plantilla.php';
+include __DIR__ . '/../plantilla.php';
 ?>

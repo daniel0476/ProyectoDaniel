@@ -1,34 +1,31 @@
-╔════════════════════════════════════════════════════════════════════════════════╗
-║              📁 ESTRUCTURA - PROYECTO BARBERÍA (BLOQUE 1)                      ║
-║                            Estado: ✅ COMPLETADO                              ║
-╚════════════════════════════════════════════════════════════════════════════════╝
+
 
 📂 ESTRUCTURA DE CARPETAS
-════════════════════════════════════════════════════════════════════════════════
+
 
 Proyecto/
 │
 ├── 📄 DOCUMENTACIÓN
-│   ├── README.md                  ⭐ Guía completa (LEE ESTO PRIMERO)
-│   └── INICIO_RAPIDO.txt          ⏱️  Setup en 5 minutos
+│   ├── README.md                  
+│   └── INICIO_RAPIDO.txt          
 │
-├── 🔐 AUTENTICACIÓN (Bloque 1 ✅)
+├── 🔐 AUTENTICACIÓN 
 │   ├── login.php                  Login con validación
 │   ├── logout.php                 Cerrar sesión
-│   └── registro.php               Formulario registro (diseño)
+│   └── registro.php               Formulario registro 
 │
 ├── ⚙️  CONFIGURACIÓN & FUNCIONES
 │   ├── config.php                 Conexión BD + sesiones
 │   ├── funciones.php              13 funciones globales
 │   └── plantilla.php              Template HTML base
 │
-├── 👤 CLIENTE (Bloques 2-3 - Próximamente)
+├── 👤 CLIENTE 
 │   ├── index.php
 │   ├── nueva_reserva.php
 │   ├── reservas.php
 │   └── mi_perfil.php
 │
-├── 🛡️  ADMIN (Bloque 4 - Próximamente)
+├── 🛡️  ADMIN 
 │   └── admin/
 │       ├── dashboard.php
 │       ├── usuarios.php
@@ -39,13 +36,16 @@ Proyecto/
 │
 └── 💾 BASE DE DATOS
     └── base_de_datos/
-        ├── barberia.sql          Original (no usar)
-        └── barberia_mejorada.sql ⭐ USAR ESTA (7 tablas)
+        ├── barberia.sql        
+        └── barberia_mejorada.sql 
 
-═════════════════════════════════════════════════════════════════════════════════
+
+
+
+
 
 🔑 ARCHIVOS PRINCIPALES
-════════════════════════════════════════════════════════════════════════════════
+
 
 CONFIG.PHP (52 líneas)
   ├─ Conexión a BD con mysqli
@@ -76,10 +76,10 @@ LOGOUT.PHP (25 líneas)
   ├─ Limpiar cookies
   └─ Redireccionar a login.php
 
-═════════════════════════════════════════════════════════════════════════════════
+
 
 🗄️  BASE DE DATOS (7 TABLAS)
-════════════════════════════════════════════════════════════════════════════════
+
 
 1. USUARIOS
    ├─ ID_usuario (PK, autoincrement)
@@ -134,14 +134,14 @@ LOGOUT.PHP (25 líneas)
    ├─ ip_address (VARCHAR)
    └─ navegador (VARCHAR)
 
-═════════════════════════════════════════════════════════════════════════════════
+
 
 👤 CREDENCIALES PRUEBA
-════════════════════════════════════════════════════════════════════════════════
+
 
 CLIENTE:
   Email: juan@email.com
-  Pass:  1234
+  Pass:  123456
 
 ADMIN:
   Email: admin@email.com
@@ -149,61 +149,8 @@ ADMIN:
 
 Todas las contraseñas están hasheadas con bcrypt.
 Hash: $2y$10$rS9Pv3M4.8qL9nX2K5tN.OW1jZ6mP7kL2hG5dY8wQ3rE4tU7nO
+Seguridad:            Bcrypt, sesiones, validación, SQL injection protection
 
-═════════════════════════════════════════════════════════════════════════════════
 
-🚀 CÓMO EMPEZAR
-════════════════════════════════════════════════════════════════════════════════
+═
 
-1. Lee: README.md (documentación completa)
-2. O Ve: INICIO_RAPIDO.txt (setup en 5 minutos)
-
-═════════════════════════════════════════════════════════════════════════════════
-
-📊 ESTADÍSTICAS
-════════════════════════════════════════════════════════════════════════════════
-
-Archivos PHP:        4 (597 líneas totales)
-Funciones PHP:       13
-Tablas BD:           7
-Usuarios ejemplo:    5 (4 clientes + 1 admin)
-Barberos ejemplo:    2
-Servicios ejemplo:   5
-Citas ejemplo:       0 (sin citas iniciales)
-
-Líneas código:       ~2,500+
-Seguridad:           ✅ Bcrypt, sesiones, validación, SQL injection protection
-
-═════════════════════════════════════════════════════════════════════════════════
-
-📈 FASES DE DESARROLLO
-════════════════════════════════════════════════════════════════════════════════
-
-BLOQUE 1: Backend Básico ✅ (COMPLETO)
-  ├─ Configuración BD
-  ├─ Autenticación segura
-  ├─ Funciones globales
-  └─ BD relacional (7 tablas)
-
-BLOQUE 2: Frontend Dinámico 📦 (Próximo)
-  ├─ Página principal
-  ├─ Ver servicios y barberos
-  ├─ Perfil de usuario
-  └─ Plantilla responsive
-
-BLOQUE 3: Sistema de Reservas 📦
-  ├─ Calendario interactivo
-  ├─ Crear/ver/cancelar citas
-  ├─ Validaciones complejas
-  └─ Lógica de disponibilidad
-
-BLOQUE 4: Panel Admin 📦
-  ├─ CRUD completo (usuarios, barberos, servicios, citas)
-  ├─ Dashboard con estadísticas
-  ├─ Gestión integral
-  └─ Reportes
-
-═════════════════════════════════════════════════════════════════════════════════
-
-✅ ÚLTIMA ACTUALIZACIÓN: Mayo 2026
-   Estado: Bloque 1 Completado y Documentado

@@ -1,16 +1,13 @@
 <?php
 /**
  * funciones.php
- * Funciones auxiliares globales
+ * Funciones compartidas por varias páginas del proyecto.
  */
 
-// ============================================
-// FUNCIONES DE SEGURIDAD
-// ============================================
+// Seguridad y sesión
 
 /**
- * Verificar si el usuario está autenticado
- * Si no, redirige a login
+ * Comprueba si hay sesión activa y redirige al login si no.
  */
 function verificar_autenticacion() {
     if (!isset($_SESSION['usuario_id'])) {
@@ -20,7 +17,7 @@ function verificar_autenticacion() {
 }
 
 /**
- * Verificar si el usuario es administrador
+ * Comprueba si el usuario tiene rol de administrador.
  */
 function verificar_admin() {
     if (($_SESSION['usuario_rol'] ?? null) !== 'admin') {
@@ -29,42 +26,50 @@ function verificar_admin() {
 }
 
 /**
- * Escapar salida HTML
+ * Escapa texto para mostrarlo seguro en HTML.
  */
 function e($valor) {
     return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 /**
- * Hashear contraseña
+ * Crea un hash seguro para la contraseña.
  */
 function hashear_contrasena($contrasena) {
     return password_hash($contrasena, PASSWORD_BCRYPT);
 }
 
 /**
- * Verificar contraseña
+ * Comprueba la contraseña contra su hash.
  */
 function verificar_contrasena($contrasena, $hash) {
     return password_verify($contrasena, $hash);
 }
 
 /**
- * Escapar entrada para SQL
+ * Guarda la nueva contraseña hasheada en la base de datos.
+ */
+function actualizar_contrasena_usuario($id_usuario, $hash, $conexion) {
+    $query = "UPDATE usuarios SET contrasena = '" . escapar($hash, $conexion) . "' WHERE ID_usuario = " . intval($id_usuario);
+    return $conexion->query($query);
+}
+
+/**
+ * Escapa texto antes de usarlo en una consulta SQL.
  */
 function escapar($texto, $conexion) {
     return $conexion->real_escape_string($texto);
 }
 
 /**
- * Validar email
+ * Comprueba que un email tiene un formato válido.
  */
 function validar_email($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
 /**
- * Obtener o crear token CSRF de sesión
+ * Recupera o genera el token CSRF de la sesión.
  */
 function obtener_csrf_token() {
     if (empty($_SESSION['csrf_token'])) {
@@ -75,14 +80,14 @@ function obtener_csrf_token() {
 }
 
 /**
- * Campo oculto CSRF para formularios
+ * Devuelve un input oculto con el token CSRF.
  */
 function csrf_input() {
     return '<input type="hidden" name="csrf_token" value="' . e(obtener_csrf_token()) . '">';
 }
 
 /**
- * Validar token CSRF para peticiones POST
+ * Comprueba que el token CSRF enviado es válido.
  */
 function verificar_csrf() {
     return isset($_POST['csrf_token'], $_SESSION['csrf_token'])
@@ -90,7 +95,7 @@ function verificar_csrf() {
 }
 
 /**
- * Exigir token CSRF válido
+ * Detiene la petición si el token CSRF no coincide.
  */
 function requerir_csrf() {
     if (!verificar_csrf()) {
@@ -99,12 +104,10 @@ function requerir_csrf() {
     }
 }
 
-// ============================================
-// FUNCIONES DE BASE DE DATOS
-// ============================================
+// Consultas y datos compartidos
 
 /**
- * Obtener usuario por ID
+ * Busca al usuario activo por su ID.
  */
 function obtener_usuario($id, $conexion) {
     $query = "SELECT * FROM usuarios WHERE ID_usuario = " . intval($id) . " AND activo = 1";
@@ -113,7 +116,7 @@ function obtener_usuario($id, $conexion) {
 }
 
 /**
- * Obtener usuario por email
+ * Busca al usuario activo usando su email.
  */
 function obtener_usuario_por_email($email, $conexion) {
     $email = escapar($email, $conexion);
@@ -123,7 +126,7 @@ function obtener_usuario_por_email($email, $conexion) {
 }
 
 /**
- * Obtener barbero por DNI
+ * Busca al barbero activo según su DNI.
  */
 function obtener_barbero($dni, $conexion) {
     $dni = escapar($dni, $conexion);
@@ -133,7 +136,7 @@ function obtener_barbero($dni, $conexion) {
 }
 
 /**
- * Obtener todos los barberos activos
+ * Devuelve los barberos activos ordenados por nombre.
  */
 function obtener_barberos($conexion) {
     $query = "SELECT * FROM barberos WHERE activo = 1 ORDER BY nombre";
@@ -142,7 +145,7 @@ function obtener_barberos($conexion) {
 }
 
 /**
- * Obtener servicio por ID
+ * Busca el servicio activo por su ID.
  */
 function obtener_servicio($id, $conexion) {
     $query = "SELECT * FROM servicios WHERE ID_servicio = " . intval($id) . " AND activo = 1";
@@ -151,7 +154,7 @@ function obtener_servicio($id, $conexion) {
 }
 
 /**
- * Obtener todos los servicios activos
+ * Devuelve los servicios activos ordenados por nombre.
  */
 function obtener_servicios($conexion) {
     $query = "SELECT * FROM servicios WHERE activo = 1 ORDER BY nombre";
@@ -160,66 +163,91 @@ function obtener_servicios($conexion) {
 }
 
 /**
- * Obtener cita por ID
+ * Recupera la información completa de una cita.
  */
 function obtener_cita($id, $conexion) {
-    $query = "SELECT c.*, 
-                     u.nombre as nombre_cliente, u.email, u.telefono,
-                     b.nombre as barbero_nombre, b.apellidos as barbero_apellidos,
-                     s.nombre as servicio_nombre, s.duracion_minutos
-              FROM citas c
-              LEFT JOIN usuarios u ON c.ID_usuario = u.ID_usuario
-              LEFT JOIN barberos b ON c.DNI_barbero = b.DNI_barbero
-              LEFT JOIN servicios s ON c.ID_servicio = s.ID_servicio
-              WHERE c.ID_cita = " . intval($id);
+    $query = "SELECT * FROM citas WHERE ID_cita = " . intval($id);
     $resultado = $conexion->query($query);
-    return $resultado->fetch_assoc();
+    $cita = $resultado->fetch_assoc();
+    
+    if (!$cita) {
+        return null;
+    }
+    
+    // Obtener datos del usuario
+    $usuario = obtener_usuario($cita['ID_usuario'], $conexion);
+    $cita['nombre_cliente'] = $usuario['nombre'] ?? '';
+    $cita['email'] = $usuario['email'] ?? '';
+    $cita['telefono'] = $usuario['telefono'] ?? '';
+    
+    // Obtener datos del barbero
+    $barbero = obtener_barbero($cita['DNI_barbero'], $conexion);
+    $cita['barbero_nombre'] = $barbero['nombre'] ?? '';
+    $cita['barbero_apellidos'] = $barbero['apellidos'] ?? '';
+    
+    // Obtener datos del servicio
+    $servicio = obtener_servicio($cita['ID_servicio'], $conexion);
+    $cita['servicio_nombre'] = $servicio['nombre'] ?? '';
+    $cita['duracion_minutos'] = $servicio['duracion_minutos'] ?? 0;
+    
+    return $cita;
 }
 
 /**
- * Obtener citas de un usuario
+ * Trae todas las citas asociadas a un usuario.
  */
 function obtener_citas_usuario($id_usuario, $conexion) {
-    $query = "SELECT c.*, 
-                     b.nombre as barbero_nombre, b.apellidos as barbero_apellidos,
-                     s.nombre as servicio_nombre, s.duracion_minutos
-              FROM citas c
-              LEFT JOIN barberos b ON c.DNI_barbero = b.DNI_barbero
-              LEFT JOIN servicios s ON c.ID_servicio = s.ID_servicio
-              WHERE c.ID_usuario = " . intval($id_usuario) . "
-              ORDER BY c.fecha DESC, c.hora DESC";
+    $query = "SELECT * FROM citas WHERE ID_usuario = " . intval($id_usuario) . " AND estado != 'cancelada' ORDER BY fecha DESC, hora DESC";
     $resultado = $conexion->query($query);
-    return $resultado->fetch_all(MYSQLI_ASSOC);
+    $citas = $resultado->fetch_all(MYSQLI_ASSOC);
+    
+    // Enriquecer cada cita con datos de barbero y servicio
+    foreach ($citas as &$cita) {
+        $barbero = obtener_barbero($cita['DNI_barbero'], $conexion);
+        $cita['barbero_nombre'] = $barbero['nombre'] ?? '';
+        $cita['barbero_apellidos'] = $barbero['apellidos'] ?? '';
+        
+        $servicio = obtener_servicio($cita['ID_servicio'], $conexion);
+        $cita['servicio_nombre'] = $servicio['nombre'] ?? '';
+        $cita['duracion_minutos'] = $servicio['duracion_minutos'] ?? 0;
+    }
+    
+    return $citas;
 }
 
 /**
- * Obtener citas del barbero en una fecha
+ * Trae las citas de un barbero en un día concreto.
  */
 function obtener_citas_barbero_fecha($dni_barbero, $fecha, $conexion) {
     $dni_barbero = escapar($dni_barbero, $conexion);
     $fecha = escapar($fecha, $conexion);
-    $query = "SELECT c.hora, s.duracion_minutos
-              FROM citas c
-              LEFT JOIN servicios s ON c.ID_servicio = s.ID_servicio
-              WHERE c.DNI_barbero = '$dni_barbero' 
-              AND c.fecha = '$fecha'
-              AND c.estado != 'cancelada'
-              ORDER BY c.hora";
+    $query = "SELECT * FROM citas WHERE DNI_barbero = '$dni_barbero' AND fecha = '$fecha' AND estado != 'cancelada' ORDER BY hora";
     $resultado = $conexion->query($query);
-    return $resultado->fetch_all(MYSQLI_ASSOC);
+    $citas = $resultado->fetch_all(MYSQLI_ASSOC);
+    
+    // Agregar duración del servicio a cada cita
+    foreach ($citas as &$cita) {
+        $servicio = obtener_servicio($cita['ID_servicio'], $conexion);
+        $cita['duracion_minutos'] = $servicio['duracion_minutos'] ?? 0;
+    }
+    
+    return $citas;
 }
 
 /**
- * Obtener configuración del sistema
+ * Lee la configuración general de la barbería.
  */
 function obtener_config_sistema($conexion) {
     $query = "SELECT * FROM configuracion_sistema WHERE ID_config = 1 LIMIT 1";
     $resultado = $conexion->query($query);
-    return $resultado->fetch_assoc();
+    if (!$resultado) {
+        return [];
+    }
+    return $resultado->fetch_assoc() ?: [];
 }
 
 /**
- * Convertir hora HH:MM(:SS) a minutos del día
+ * Convierte una hora en minutos desde medianoche.
  */
 function hora_a_minutos($hora) {
     $partes = explode(':', $hora);
@@ -229,7 +257,7 @@ function hora_a_minutos($hora) {
 }
 
 /**
- * Convertir minutos del día a HH:MM
+ * Da formato HH:MM a una cantidad de minutos.
  */
 function minutos_a_hora($minutos) {
     $h = floor($minutos / 60);
@@ -238,7 +266,7 @@ function minutos_a_hora($minutos) {
 }
 
 /**
- * Obtener bloques base de disponibilidad para un barbero en una fecha
+ * Devuelve los bloques de disponibilidad base para un barbero.
  */
 function obtener_bloques_disponibles_barbero($dni_barbero, $fecha, $conexion) {
     $dni_barbero = escapar($dni_barbero, $conexion);
@@ -271,7 +299,7 @@ function obtener_bloques_disponibles_barbero($dni_barbero, $fecha, $conexion) {
 }
 
 /**
- * Calcular horas de inicio disponibles para una reserva
+ * Calcula las horas libres disponibles para reservar.
  */
 function obtener_slots_disponibles_barbero($dni_barbero, $fecha, $id_servicio, $conexion) {
     $servicio = obtener_servicio($id_servicio, $conexion);
@@ -340,12 +368,10 @@ function obtener_slots_disponibles_barbero($dni_barbero, $fecha, $id_servicio, $
     return $slots;
 }
 
-// ============================================
-// FUNCIONES DE UTILIDAD
-// ============================================
+
 
 /**
- * Formatear fecha a formato español
+ * Formatea una fecha con estilo español.
  */
 function formatear_fecha($fecha) {
     $meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
@@ -362,14 +388,14 @@ function formatear_fecha($fecha) {
 }
 
 /**
- * Convertir hora a formato 12h
+ * Formatea una hora al estilo HH:MM.
  */
 function formatear_hora($hora) {
-    return date('H:i', strtotime($hora));
+    return date('g:i A', strtotime($hora));
 }
 
 /**
- * Generar array de horas disponibles (slots)
+ * Genera los slots libres entre dos horas.
  */
 function generar_slots_disponibles($hora_inicio, $hora_fin, $duracion_minutos, $citas_ocupadas = []) {
     $slots = [];
@@ -380,7 +406,7 @@ function generar_slots_disponibles($hora_inicio, $hora_fin, $duracion_minutos, $
         $hora_actual = date('H:i', $inicio);
         $hora_siguiente = date('H:i', strtotime('+' . $duracion_minutos . ' minutes', $inicio));
         
-        // Verificar si no está ocupado
+        // Ignorar si el slot ya está reservado
         $ocupado = false;
         foreach ($citas_ocupadas as $cita) {
             $cita_inicio = strtotime($cita['hora']);
@@ -388,7 +414,7 @@ function generar_slots_disponibles($hora_inicio, $hora_fin, $duracion_minutos, $
             $slot_inicio = $inicio;
             $slot_fin = strtotime('+' . $duracion_minutos . ' minutes', $inicio);
             
-            // Verificar si hay solapamiento
+            // Detectar si el slot choca con otra cita
             if ($slot_inicio < $cita_fin && $slot_fin > $cita_inicio) {
                 $ocupado = true;
                 break;
@@ -409,7 +435,7 @@ function generar_slots_disponibles($hora_inicio, $hora_fin, $duracion_minutos, $
 }
 
 /**
- * Registrar acceso en historial
+ * Registra el acceso del usuario en el historial.
  */
 function registrar_acceso($id_usuario, $conexion) {
     $ip = escapar($_SERVER['REMOTE_ADDR'], $conexion);
@@ -421,7 +447,7 @@ function registrar_acceso($id_usuario, $conexion) {
 }
 
 /**
- * Mensaje de alerta (HTML)
+ * Devuelve el HTML de una alerta.
  */
 function alerta($mensaje, $tipo = 'info') {
     $clases = [
@@ -436,7 +462,7 @@ function alerta($mensaje, $tipo = 'info') {
 }
 
 /**
- * Redireccionar con mensaje
+ * Guarda un mensaje flash y redirige a otra página.
  */
 function redirigir_con_mensaje($url, $mensaje, $tipo = 'info') {
     $_SESSION['mensaje'] = $mensaje;
@@ -446,7 +472,7 @@ function redirigir_con_mensaje($url, $mensaje, $tipo = 'info') {
 }
 
 /**
- * Mostrar y limpiar mensaje de sesión
+ * Muestra un mensaje flash y lo elimina de la sesión.
  */
 function mostrar_mensaje() {
     if (isset($_SESSION['mensaje'])) {
@@ -460,7 +486,7 @@ function mostrar_mensaje() {
 }
 
 /**
- * Obtener horas mínimas para cancelar una cita
+ * Lee el tiempo mínimo para cancelar una cita.
  */
 function obtener_horas_cancelacion($conexion) {
     $config = obtener_config_sistema($conexion);

@@ -95,6 +95,11 @@ body {
 
 .table {
   --bs-table-bg: transparent;
+  --bs-table-color: var(--ink);
+}
+
+.table thead th {
+  color: var(--ink);
 }
 
 .btn-dark {

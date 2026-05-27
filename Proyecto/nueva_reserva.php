@@ -1,7 +1,7 @@
 <?php
 /**
  * nueva_reserva.php
- * Sistema de reservas con calendario y selección de horarios
+ * Página para crear una reserva nueva.
  */
 
 require_once 'config.php';
@@ -14,7 +14,7 @@ $titulo_pagina = 'Nueva Reserva - ' . APP_NAME;
 $error = '';
 $exito = '';
 
-// Obtener datos necesarios
+// Cargar datos necesarios para crear la reserva
 $servicios = obtener_servicios($mysqli);
 $barberos = obtener_barberos($mysqli);
 $config = obtener_config_sistema($mysqli);
@@ -42,7 +42,7 @@ $estilos_adicionales = '<style>
     }
 </style>';
 
-// Procesar reserva
+// Procesar el formulario de nueva reserva
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requerir_csrf();
 
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dni_barbero = trim($_POST['dni_barbero'] ?? '');
     $notas = trim($_POST['notas'] ?? '');
     
-    // Validar datos
+    // Validar los datos del formulario
     if (empty($fecha) || empty($hora) || $id_servicio <= 0 || empty($dni_barbero)) {
         $error = 'Por favor, completa todos los campos requeridos.';
     } else {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$servicio) {
             $error = 'Servicio no encontrado.';
         } else {
-            // Verificar que la fecha sea válida (hoy o futura)
+            // Comprobar que la fecha sea hoy o posterior
             if (strtotime($fecha) < strtotime(date('Y-m-d'))) {
                 $error = 'La fecha debe ser hoy o posterior.';
             } else {
@@ -211,6 +211,11 @@ ob_start();
                         <div id="resumen_contenido"></div>
                     </div>
                     
+                    <!-- AVISO CANCELACIÓN -->
+                    <div class="alert alert-warning py-2 mb-3" role="alert">
+                        <small><i class="bi bi-info-circle"></i> Las citas solo se pueden cancelar hasta <strong><?php echo (int)($config['aviso_cancelacion_horas'] ?? 24); ?>h</strong> antes de la hora reservada.</small>
+                    </div>
+
                     <!-- BOTONES -->
                     <div class="d-flex gap-2 justify-content-between">
                         <a href="index.php" class="btn btn-secondary">
@@ -301,10 +306,18 @@ async function actualizarHorarios() {
             return;
         }
 
+        function formato12h(hora) {
+            const [h, m] = hora.split(':');
+            const ih = parseInt(h, 10);
+            const ampm = ih >= 12 ? 'PM' : 'AM';
+            const h12 = ih % 12 || 12;
+            return h12 + ':' + m + ' ' + ampm;
+        }
+
         data.slots.forEach((hora) => {
             const option = document.createElement('option');
             option.value = hora;
-            option.textContent = hora;
+            option.textContent = formato12h(hora);
             horaSelect.appendChild(option);
         });
 
